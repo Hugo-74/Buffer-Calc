@@ -1,6 +1,6 @@
 const CACHE_NAME = 'buffer-calc-v1';
 const urlsToCache = [
-  './Concentration.html',
+  './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -25,4 +25,5 @@ self.addEventListener('fetch', event => {
         return response || fetch(event.request);
       })
   );
+
 });
