@@ -2,7 +2,7 @@
   "name": "Buffer Calculator Pro",
   "short_name": "BufferCalc",
   "description": "Calculateur de tampons et solutions de laboratoire",
-  "start_url": "./Concentration.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f2f2f7",
   "theme_color": "#007aff",
@@ -18,4 +18,5 @@
       "type": "image/png"
     }
   ]
+
 }
