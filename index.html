@@ -25,7 +25,7 @@ body { background:var(--bg); color:var(--l); font-family:-apple-system,'SF Pro T
 
 /* NAV */
 .nav { background:rgba(242,242,247,0.88); backdrop-filter:saturate(180%) blur(20px); position:sticky; top:0; z-index:100; border-bottom:0.5px solid var(--sep-o); }
-.nav-inner { max-width:600px; margin:0 auto; padding:14px 20px 12px; display:flex; align-items:center; justify-content:space-between; }
+.nav-inner { max-width:600px; margin:0 auto; padding:14px 20px 12px; display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:8px; }
 .nav-badge { background:var(--blue-l); color:var(--blue); font-size:12px; font-weight:600; padding:3px 9px; border-radius:100px; }
 .nav-title { font-size:17px; font-weight:600; letter-spacing:-0.4px; }
 .nav-step { font-size:13px; color:var(--l2); }
@@ -237,6 +237,35 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 }
 #pdf-zone { display:none; }
 
+
+/* LANG TOGGLE */
+.lang-btn { background:var(--fill); border:none; border-radius:8px; padding:5px 11px; font-family:inherit; font-size:12px; font-weight:700; color:var(--l2); cursor:pointer; letter-spacing:0.05em; flex-shrink:0; }
+.lang-btn:active { opacity:0.6; }
+
+/* CONVERSIONS */
+.cv-card { background:var(--surface); border-radius:var(--r); overflow:hidden; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+.cv-hdr { padding:13px 16px 11px; border-bottom:0.5px solid var(--sep); display:flex; align-items:center; gap:10px; }
+.cv-ico { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.cv-ttl { font-size:15px; font-weight:600; }
+.cv-sub { font-size:12px; color:var(--l2); margin-top:1px; }
+.cv-body { padding:14px 16px 16px; }
+.cv-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.cv-row:last-child { margin-bottom:0; }
+.cv-lbl { font-size:13px; color:var(--l2); width:72px; flex-shrink:0; }
+.cv-inp { background:var(--bg); border:1px solid var(--sep-o); border-radius:10px; padding:9px 12px; font-family:inherit; font-size:16px; color:var(--l); outline:none; caret-color:var(--blue); width:120px; text-align:right; -moz-appearance:textfield; transition:border-color 0.15s; }
+.cv-inp::-webkit-outer-spin-button,.cv-inp::-webkit-inner-spin-button { -webkit-appearance:none; }
+.cv-inp:focus { border-color:var(--blue); }
+.cv-unit { font-size:13px; color:var(--l2); flex-shrink:0; min-width:36px; }
+.cv-sep { display:flex; align-items:center; color:var(--l3); font-size:18px; padding:0 2px; }
+.cv-result { background:var(--blue-l); border:0.5px solid rgba(0,122,255,0.15); border-radius:10px; padding:11px 14px; display:flex; justify-content:space-between; align-items:baseline; margin-top:6px; }
+.cv-res-val { font-size:20px; font-weight:700; color:var(--blue); letter-spacing:-0.4px; }
+.cv-res-unit { font-size:13px; color:var(--blue); opacity:0.75; }
+.cv-res-err { font-size:14px; color:var(--l3); font-style:italic; }
+.cv-divider { height:0.5px; background:var(--sep); margin:12px 0; }
+.cv-dir-seg { display:flex; background:var(--fill); border-radius:9px; padding:2px; gap:2px; margin-bottom:12px; }
+.cv-dsb { flex:1; border:none; background:transparent; font-family:inherit; font-size:12px; font-weight:500; color:var(--l2); padding:6px 4px; border-radius:7px; cursor:pointer; transition:all 0.18s; text-align:center; }
+.cv-dsb.active { background:var(--surface); color:var(--l); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
+
 @keyframes sli { from{opacity:0;transform:translateY(10px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
 </style>
 </head>
@@ -245,17 +274,18 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 <div class="nav">
   <div class="nav-inner">
     <span class="nav-badge">Lab</span>
-    <span class="nav-title">Buffer Calculator</span>
-    <span class="nav-step" id="nav-step">0 reactif</span>
+    <span class="nav-title" style="text-align:center">Buffer Calculator</span>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px"><span class="nav-step" id="nav-step">0 reactif</span><button class="lang-btn" id="lang-btn" onclick="toggleLang()">EN</button></div>
   </div>
   <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
 </div>
 
 <div class="tab-wrap">
   <div class="tab-bar">
-    <button class="tab-btn active" id="tab-calc" onclick="switchTab('calc')"><span class="ti">&#9879;&#65039;</span>Calculer</button>
-    <button class="tab-btn" id="tab-saved" onclick="switchTab('saved')"><span class="ti">&#128190;</span>Recettes <span id="saved-badge" style="display:none;background:var(--red);color:#fff;border-radius:10px;font-size:10px;padding:1px 5px;margin-left:2px"></span></button>
-    <button class="tab-btn" id="tab-ab" onclick="switchTab('ab')"><span class="ti">&#128300;</span>Anticorps <span id="ab-badge" style="display:none;background:var(--purple);color:#fff;border-radius:10px;font-size:10px;padding:1px 5px;margin-left:2px"></span></button>
+    <button class="tab-btn active" id="tab-calc" onclick="switchTab('calc')"><span class="ti">&#9879;&#65039;</span><span data-i18n="tab_calc">Calculer</span></button>
+    <button class="tab-btn" id="tab-saved" onclick="switchTab('saved')"><span class="ti">&#128190;</span><span data-i18n="tab_saved">Recettes</span> <span id="saved-badge" style="display:none;background:var(--red);color:#fff;border-radius:10px;font-size:10px;padding:1px 5px;margin-left:2px"></span></button>
+    <button class="tab-btn" id="tab-ab" onclick="switchTab('ab')"><span class="ti">&#128300;</span><span data-i18n="tab_ab">Anticorps</span> <span id="ab-badge" style="display:none;background:var(--purple);color:#fff;border-radius:10px;font-size:10px;padding:1px 5px;margin-left:2px"></span></button>
+    <button class="tab-btn" id="tab-conv" onclick="switchTab('conv')"><span class="ti">&#9881;&#65039;</span><span data-i18n="tab_conv">Conversions</span></button>
   </div>
 </div>
 
@@ -263,27 +293,27 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 <div class="page active" id="page-calc">
 <div class="sc">
   <div class="section">
-    <div class="sh"><span class="sl">Solution</span></div>
+    <div class="sh"><span class="sl" data-i18n="sl_solution">Solution</span></div>
     <div class="group">
       <div class="row">
         <div class="ri ib">&#129516;</div>
-        <span class="rl">Nom</span>
+        <span class="rl" data-i18n="rl_name">Nom</span>
         <div class="rr" style="flex:1"><input type="text" id="sol_name" placeholder="ex. PBS 1x, Lysis buffer..."></div>
       </div>
       <div class="row">
         <div class="ri it">&#128208;</div>
-        <span class="rl">Volume</span>
+        <span class="rl" data-i18n="rl_volume">Volume</span>
         <div class="rr">
           <input type="number" id="vol_total" placeholder="500" min="0.001" step="any" style="width:90px" oninput="updProg();updScale()">
           <span class="unit">mL</span>
         </div>
       </div>
     </div>
-    <div class="sf">Volume final vise, apres ajout de tous les reactifs et complement a l'eau.</div>
+    <div class="sf"><span data-i18n="sf_vol_hint">Volume final vise, apres ajout de tous les reactifs et complement a l'eau.</span></div>
   </div>
 
   <div class="section">
-    <div class="sh"><span class="sl">Reactifs</span></div>
+    <div class="sh"><span class="sl" data-i18n="sl_reagents">Reactifs</span></div>
     <div id="ing-container">
       <div class="empty" id="ing-empty" style="padding:28px 20px">
         <div class="ei" style="font-size:36px">&#9879;&#65039;</div>
@@ -291,23 +321,23 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
         <div class="es">Ajoutez vos ingredients ci-dessous</div>
       </div>
     </div>
-    <button class="btn-add" onclick="addIng()">+ Ajouter un reactif</button>
+    <button class="btn-add" onclick="addIng()"><span data-i18n="btn_add_ing">+ Ajouter un reactif</span></button>
   </div>
 
-  <button class="btn-pri" onclick="calculer()">&#8594; Calculer la recette</button>
+  <button class="btn-pri" onclick="calculer()"><span data-i18n="btn_calc">&#8594; Calculer la recette</span></button>
 
   <div id="results" style="margin-top:36px">
-    <div class="sh"><span class="sl">Resultat</span></div>
+    <div class="sh"><span class="sl" data-i18n="sl_result">Resultat</span></div>
 
     <div class="scale-box" id="scale-box">
       <div class="scale-ttl">&#9878;&#65039; Scale up / down</div>
       <div class="scale-row">
-        <span style="font-size:15px;color:var(--l2)">Recalculer pour</span>
+        <span style="font-size:15px;color:var(--l2)"><span data-i18n="lbl_recalc">Recalculer pour</span></span>
         <input type="number" class="sc-inp" id="scale-tgt" placeholder="2000" min="0.001" step="any" oninput="updScale()">
         <span class="unit">mL</span>
         <span style="font-size:20px;color:var(--l3)">&#8594;</span>
         <span class="sc-badge" id="scale-badge">x?</span>
-        <button class="btn-sc" onclick="applyScale()">Appliquer</button>
+        <button class="btn-sc" onclick="applyScale()"><span data-i18n="btn_apply">Appliquer</span></button>
       </div>
     </div>
 
@@ -317,28 +347,28 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
         <div class="rh-badge" id="res-badge">--</div>
       </div>
       <div class="res-stats">
-        <div class="stat"><div class="stat-v" id="stat-vol">--</div><div class="stat-l">Volume final</div></div>
-        <div class="stat"><div class="stat-v" id="stat-cnt">--</div><div class="stat-l">Reactifs</div></div>
-        <div class="stat"><div class="stat-v" id="stat-typ">--</div><div class="stat-l">Types</div></div>
+        <div class="stat"><div class="stat-v" id="stat-vol">--</div><div class="stat-l" data-i18n="stat_vol">Volume final</div></div>
+        <div class="stat"><div class="stat-v" id="stat-cnt">--</div><div class="stat-l" data-i18n="stat_reagents">Reactifs</div></div>
+        <div class="stat"><div class="stat-v" id="stat-typ">--</div><div class="stat-l" data-i18n="stat_types">Types</div></div>
       </div>
     </div>
     <div class="group" id="res-group" style="margin-top:10px"></div>
     <div class="qsp-row">
       <div class="qsp-l">
         <div class="qsp-ico">&#128167;</div>
-        <div><div class="qsp-lbl">Completer a l&#39;eau</div><div class="qsp-sub">QSP - ajouter en dernier</div></div>
+        <div><div class="qsp-lbl" data-i18n="qsp_lbl">Completer a l'eau</div><div class="qsp-sub" data-i18n="qsp_sub">QSP - ajouter en dernier</div></div>
       </div>
       <span class="qsp-val" id="qsp-val"></span>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-      <button class="btn-act" id="copy-btn" onclick="copyRecette()">&#8983; Copier</button>
-      <button class="btn-save" onclick="openSaveModal()">&#128190; Sauvegarder</button>
+      <button class="btn-act" id="copy-btn" onclick="copyRecette()"><span data-i18n="btn_copy">&#8983; Copier</span></button>
+      <button class="btn-save" onclick="openSaveModal()"><span data-i18n="btn_save_rec">&#128190; Sauvegarder</span></button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-      <button class="btn-share" onclick="openShareModal()">&#128279; Partager</button>
-      <button class="btn-pdf" onclick="exportPDF()">&#128196; PDF</button>
+      <button class="btn-share" onclick="openShareModal()"><span data-i18n="btn_share">&#128279; Partager</span></button>
+      <button class="btn-pdf" onclick="exportPDF()"><span data-i18n="btn_pdf">&#128196; PDF</span></button>
     </div>
-    <button class="btn-rst" style="width:100%;margin-top:10px" onclick="resetForm()">&#8635; Recommencer</button>
+    <button class="btn-rst" style="width:100%;margin-top:10px" onclick="resetForm()"><span data-i18n="btn_reset">&#8635; Recommencer</span></button>
   </div>
 </div>
 </div>
@@ -347,8 +377,8 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 <div class="page" id="page-saved">
 <div class="sc">
   <div class="sh" style="margin-bottom:12px">
-    <span class="sl">Recettes sauvegardees</span>
-    <button class="btn-act" style="padding:6px 12px;font-size:13px;box-shadow:none" onclick="clearAllSaved()">Tout effacer</button>
+    <span class="sl" data-i18n="sl_saved">Recettes sauvegardees</span>
+    <button class="btn-act" style="padding:6px 12px;font-size:13px;box-shadow:none" onclick="clearAllSaved()"><span data-i18n="btn_clear_all">Tout effacer</span></button>
   </div>
   <div id="saved-list"></div>
 </div>
@@ -358,22 +388,134 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 <div class="page" id="page-ab">
 <div class="sc">
   <div class="sh" style="margin-bottom:12px">
-    <span class="sl">Mes anticorps</span>
-    <button class="btn-act" style="padding:7px 14px;font-size:13px;background:var(--purple);color:#fff;border-radius:10px;box-shadow:none" onclick="openAbModal(null)">+ Ajouter</button>
+    <span class="sl" data-i18n="sl_antibodies">Mes anticorps</span>
+    <button class="btn-act" style="padding:7px 14px;font-size:13px;background:var(--purple);color:#fff;border-radius:10px;box-shadow:none" onclick="openAbModal(null)"><span data-i18n="btn_add_ab">+ Ajouter</span></button>
   </div>
   <div id="ab-list"></div>
 </div>
 </div>
 
+
+<!-- PAGE CONVERSIONS -->
+<div class="page" id="page-conv">
+<div class="sc">
+
+  <!-- µg/mL <-> nM -->
+  <div class="cv-card">
+    <div class="cv-hdr">
+      <div class="cv-ico" style="background:var(--blue)">&#9878;&#65039;</div>
+      <div><div class="cv-ttl" data-i18n="cv_conc_ttl">Concentration</div><div class="cv-sub" data-i18n="cv_conc_sub">µg/mL &#8596; mM (avec masse molaire)</div></div>
+    </div>
+    <div class="cv-body">
+      <div class="cv-dir-seg">
+        <button class="cv-dsb active" id="cv-conc-d1" onclick="cvConcDir(1)" data-i18n="cv_ugml_to_nm">µg/mL &#8594; mM</button>
+        <button class="cv-dsb" id="cv-conc-d2" onclick="cvConcDir(2)" data-i18n="cv_nm_to_ugml">mM &#8594; µg/mL</button>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl" data-i18n="cv_mw_lbl">MW</span>
+        <input type="number" class="cv-inp" id="cv-mw" placeholder="66400" min="0" step="any" oninput="cvConc()">
+        <span class="cv-unit">g/mol</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl" id="cv-conc-lbl">µg/mL</span>
+        <input type="number" class="cv-inp" id="cv-conc-in" placeholder="1000" min="0" step="any" oninput="cvConc()">
+        <span class="cv-unit" id="cv-conc-in-u">µg/mL</span>
+      </div>
+      <div class="cv-result" id="cv-conc-res"><span class="cv-res-err" data-i18n="cv_fill_fields">Remplissez les champs</span></div>
+    </div>
+  </div>
+
+  <!-- % <-> molaire -->
+  <div class="cv-card">
+    <div class="cv-hdr">
+      <div class="cv-ico" style="background:var(--teal)">&#128167;</div>
+      <div><div class="cv-ttl" data-i18n="cv_pct_ttl">% &#8596; Molaire</div><div class="cv-sub" data-i18n="cv_pct_sub">Interconversion concentration massique / molaire</div></div>
+    </div>
+    <div class="cv-body">
+      <div class="cv-dir-seg">
+        <button class="cv-dsb active" id="cv-pct-d1" onclick="cvPctDir(1)" data-i18n="cv_pct_to_m">% &#8594; M</button>
+        <button class="cv-dsb" id="cv-pct-d2" onclick="cvPctDir(2)" data-i18n="cv_m_to_pct">M &#8594; %</button>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl" data-i18n="cv_mw_lbl">MW</span>
+        <input type="number" class="cv-inp" id="cv-pct-mw" placeholder="98.08" min="0" step="any" oninput="cvPct()">
+        <span class="cv-unit">g/mol</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl" data-i18n="cv_density_lbl">Densite</span>
+        <input type="number" class="cv-inp" id="cv-pct-dens" placeholder="1.84" min="0" step="any" oninput="cvPct()">
+        <span class="cv-unit">g/mL</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl" id="cv-pct-lbl">%</span>
+        <input type="number" class="cv-inp" id="cv-pct-in" placeholder="96" min="0" step="any" oninput="cvPct()">
+        <span class="cv-unit" id="cv-pct-in-u">%</span>
+      </div>
+      <div class="cv-result" id="cv-pct-res"><span class="cv-res-err" data-i18n="cv_fill_fields">Remplissez les champs</span></div>
+    </div>
+  </div>
+
+  <!-- RPM <-> RCF -->
+  <div class="cv-card">
+    <div class="cv-hdr">
+      <div class="cv-ico" style="background:var(--orange)">&#128260;</div>
+      <div><div class="cv-ttl" data-i18n="cv_centri_ttl">Centrifugation</div><div class="cv-sub" data-i18n="cv_centri_sub">RPM &#8596; RCF (&#215;g) selon rayon rotor</div></div>
+    </div>
+    <div class="cv-body">
+      <div class="cv-dir-seg">
+        <button class="cv-dsb active" id="cv-rpm-d1" onclick="cvRpmDir(1)" data-i18n="cv_rpm_to_rcf">RPM &#8594; RCF</button>
+        <button class="cv-dsb" id="cv-rpm-d2" onclick="cvRpmDir(2)" data-i18n="cv_rcf_to_rpm">RCF &#8594; RPM</button>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl" data-i18n="cv_radius_lbl">Rayon</span>
+        <input type="number" class="cv-inp" id="cv-rpm-r" placeholder="9.0" min="0" step="any" oninput="cvRpm()">
+        <span class="cv-unit">cm</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl" id="cv-rpm-lbl">RPM</span>
+        <input type="number" class="cv-inp" id="cv-rpm-in" placeholder="13000" min="0" step="any" oninput="cvRpm()">
+        <span class="cv-unit" id="cv-rpm-in-u">RPM</span>
+      </div>
+      <div class="cv-result" id="cv-rpm-res"><span class="cv-res-err" data-i18n="cv_fill_fields">Remplissez les champs</span></div>
+    </div>
+  </div>
+
+  <!-- Temperature -->
+  <div class="cv-card">
+    <div class="cv-hdr">
+      <div class="cv-ico" style="background:var(--red)">&#127777;&#65039;</div>
+      <div><div class="cv-ttl" data-i18n="cv_temp_ttl">Temperature</div><div class="cv-sub" data-i18n="cv_temp_sub">&#176;C &#8596; &#176;F &#8596; K</div></div>
+    </div>
+    <div class="cv-body">
+      <div class="cv-row">
+        <span class="cv-lbl">&#176;C</span>
+        <input type="number" class="cv-inp" id="cv-tc" placeholder="-20" step="any" oninput="cvTempFrom('c')">
+        <span class="cv-unit">&#176;C</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl">&#176;F</span>
+        <input type="number" class="cv-inp" id="cv-tf" placeholder="-4" step="any" oninput="cvTempFrom('f')">
+        <span class="cv-unit">&#176;F</span>
+      </div>
+      <div class="cv-row">
+        <span class="cv-lbl">K</span>
+        <input type="number" class="cv-inp" id="cv-tk" placeholder="253.15" step="any" oninput="cvTempFrom('k')">
+        <span class="cv-unit">K</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
 <!-- MODAL SAVE RECETTE -->
 <div class="mo" id="mo-save" onclick="if(event.target===this)closeSaveModal()">
   <div class="mo-box">
     <div class="mo-handle"></div>
-    <div class="mo-title">Nommer la recette</div>
+    <div class="mo-title" data-i18n="mo_name_recipe">Nommer la recette</div>
     <input class="mo-inp" id="mo-save-nom" placeholder="ex. PBS 10x, Lysis buffer pH 7.4..." maxlength="60">
     <div class="mo-acts">
-      <button class="mo-btn mo-cancel" onclick="closeSaveModal()">Annuler</button>
-      <button class="mo-btn mo-ok" onclick="saveRecette()">Sauvegarder</button>
+      <button class="mo-btn mo-cancel" onclick="closeSaveModal()"><span data-i18n="btn_cancel">Annuler</span></button>
+      <button class="mo-btn mo-ok" onclick="saveRecette()"><span data-i18n="btn_save">Sauvegarder</span></button>
     </div>
   </div>
 </div>
@@ -412,8 +554,8 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
       <div class="ab-field full"><label>Notes (conditions, blocage...)</label><input class="ab-finp" id="abf-notes" placeholder="ex. 1h RT, 5% lait TBST, overnight 4C..."></div>
     </div>
     <div class="mo-acts">
-      <button class="mo-btn mo-cancel" onclick="closeAbModal()">Annuler</button>
-      <button class="mo-btn mo-ok" style="background:var(--purple)" onclick="saveAb()">Enregistrer</button>
+      <button class="mo-btn mo-cancel" onclick="closeAbModal()"><span data-i18n="btn_cancel">Annuler</span></button>
+      <button class="mo-btn mo-ok" style="background:var(--purple)" onclick="saveAb()"><span data-i18n="btn_save">Enregistrer</span></button>
     </div>
   </div>
 </div>
@@ -427,8 +569,8 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
     <div class="qr-wrap"><canvas id="qr-canvas" width="200" height="200"></canvas></div>
     <div class="share-hint">Scannez le QR code ou copiez le lien.<br>La recette s'ouvrira directement dans l'app.</div>
     <div class="share-url-box" id="share-url-box"></div>
-    <button class="btn-share" onclick="copyShareUrl()">&#128203; Copier le lien</button>
-    <button class="mo-btn mo-cancel" style="width:100%;margin-top:8px" onclick="closeShareModal()">Fermer</button>
+    <button class="btn-share" onclick="copyShareUrl()"><span data-i18n="btn_copy_link">&#128203; Copier le lien</span></button>
+    <button class="mo-btn mo-cancel" style="width:100%;margin-top:8px" onclick="closeShareModal()"><span data-i18n="btn_close">Fermer</span></button>
   </div>
 </div>
 <div id="pdf-zone"></div>
@@ -478,7 +620,7 @@ function parseDil(str) {
 
 // ─── TABS ─────────────────────────────────────────────────────────────
 window.switchTab = function(tab) {
-  ['calc','saved','ab'].forEach(function(t) {
+  ['calc','saved','ab','conv'].forEach(function(t) {
     document.getElementById('page-'+t).classList.toggle('active', t===tab);
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
   });
@@ -492,7 +634,7 @@ function updProg() {
   var count = document.querySelectorAll('.ib-block').length;
   var pct   = (vol>0 && count>0) ? 100 : (vol>0 || count>0) ? 55 : 10;
   document.getElementById('prog-fill').style.width = pct+'%';
-  document.getElementById('nav-step').textContent = count === 0 ? '0 reactif' : count+' reactif'+(count>1?'s':'');
+  document.getElementById('nav-step').textContent = count === 0 ? '0 '+T('reagent') : count+' '+T('reagent')+(count>1?'s':'');
 }
 window.updProg = updProg;
 
@@ -511,11 +653,11 @@ window.updScale = updScale;
 window.applyScale = function() {
   var vb = parseFloat(document.getElementById('vol_total').value);
   var vt = parseFloat(document.getElementById('scale-tgt').value);
-  if (!vb || !vt || vt <= 0) { toast('Entrez un volume cible valide'); return; }
+  if (!vb || !vt || vt <= 0) { toast(T('err_vol_target')); return; }
   document.getElementById('vol_total').value = vt;
   document.getElementById('scale-tgt').value = '';
   updScale(); updProg(); calculer();
-  toast('Recette recalculee pour '+vt+' mL');
+  toast(T('toast_recalc')+' '+vt+' mL');
 };
 
 // ─── UNIT OPTIONS ────────────────────────────────────────────────────
@@ -543,13 +685,13 @@ function addIng(data) {
     '<div class="ib-hdr">'+
       '<div class="ib-hdr-l">'+
         '<div class="ib-num">'+id+'</div>'+
-        '<div class="ib-ttl" id="ib-ttl-'+id+'">'+(data&&data.nom?data.nom:'Nouveau reactif')+'</div>'+
+        '<div class="ib-ttl" id="ib-ttl-'+id+'">'+(data&&data.nom?data.nom:T('new_reagent'))+'</div>'+
       '</div>'+
       '<button class="btn-rm" onclick="rmIng('+id+')">Retirer</button>'+
     '</div>'+
     '<div class="row">'+
       '<div class="ri '+cc+'">'+ico+'</div>'+
-      '<span class="rl">Nom</span>'+
+      '<span class="rl" data-i18n="rl_name">Nom</span>'+
       '<div class="rr" style="flex:1"><input type="text" id="n-'+id+'" placeholder="ex. NaCl, Anti-rabbit HRP..." oninput="updTtl('+id+')" value="'+(data&&data.nom?data.nom:'')+'"></div>'+
     '</div>'+
     '<div class="seg-wrap">'+
@@ -579,7 +721,7 @@ window.addIng = addIng;
 
 window.updTtl = function(id) {
   var v = document.getElementById('n-'+id).value;
-  document.getElementById('ib-ttl-'+id).textContent = v || 'Nouveau reactif';
+  document.getElementById('ib-ttl-'+id).textContent = v || T('new_reagent');
 };
 
 window.rmIng = function(id) {
@@ -592,7 +734,7 @@ window.rmIng = function(id) {
     if (!document.querySelectorAll('.ib-block').length) {
       var e = document.createElement('div');
       e.className='empty'; e.id='ing-empty'; e.style.cssText='padding:28px 20px';
-      e.innerHTML='<div class="ei" style="font-size:36px">&#9879;&#65039;</div><div class="et" style="font-size:17px">Aucun reactif</div><div class="es">Ajoutez vos ingredients ci-dessous</div>';
+      e.innerHTML='<div class="ei" style="font-size:36px">&#9879;&#65039;</div><div class="et" style="font-size:17px">'+T('no_reagent')+'</div><div class="es">'+T('add_reagent_hint')+'</div>';
       document.getElementById('ing-container').prepend(e);
     }
     updProg();
@@ -626,9 +768,9 @@ function getItp(id) {
 function calculer() {
   var vol = parseFloat(document.getElementById('vol_total').value);
   var nom = document.getElementById('sol_name').value.trim() || 'Solution';
-  if (!vol || vol <= 0) { toast('Entrez un volume valide'); return; }
+  if (!vol || vol <= 0) { toast(T('err_vol')); return; }
   var cards = document.querySelectorAll('.ib-block');
-  if (!cards.length) { toast('Ajoutez au moins un reactif'); return; }
+  if (!cards.length) { toast(T('err_add_ing')); return; }
 
   recette = [];
   var err = false;
@@ -671,7 +813,7 @@ function calculer() {
     recette.push({nom:name, qty:qty, det:det, type:tp});
   });
 
-  if (err) { toast('Verifiez les champs incomplets'); return; }
+  if (err) { toast(T('err_check_fields')); return; }
 
   var tct = Object.values(tc).filter(function(v){return v>0;}).length;
   document.getElementById('res-name').textContent = nom;
@@ -700,7 +842,7 @@ function calculer() {
   document.getElementById('scale-box').classList.add('show');
   document.getElementById('prog-fill').style.width = '100%';
   setTimeout(function(){ document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'}); }, 50);
-  toast('Recette calculee');
+  toast(T('toast_calc_done'));
 }
 window.calculer = calculer;
 
@@ -727,8 +869,8 @@ window.copyRecette = function() {
   t += '--'.repeat(20)+'\nCompleter a l&#39;eau QSP '+vol+' mL';
   navigator.clipboard.writeText(t).then(function(){
     var b = document.getElementById('copy-btn');
-    b.classList.add('ok'); b.textContent = 'Copie !';
-    setTimeout(function(){ b.classList.remove('ok'); b.textContent = 'Copier'; }, 2500);
+    b.classList.add('ok'); b.textContent = T('copied');
+    setTimeout(function(){ b.classList.remove('ok'); b.textContent = T('btn_copy_txt'); }, 2500);
   });
 };
 
@@ -739,14 +881,14 @@ window.resetForm = function() {
   document.getElementById('ing-container').innerHTML = '';
   var e = document.createElement('div');
   e.className='empty'; e.id='ing-empty'; e.style.cssText='padding:28px 20px';
-  e.innerHTML='<div class="ei" style="font-size:36px">&#9879;&#65039;</div><div class="et" style="font-size:17px">Aucun reactif</div><div class="es">Ajoutez vos ingredients ci-dessous</div>';
+  e.innerHTML='<div class="ei" style="font-size:36px">&#9879;&#65039;</div><div class="et" style="font-size:17px">'+T('no_reagent')+'</div><div class="es">'+T('add_reagent_hint')+'</div>';
   document.getElementById('ing-container').appendChild(e);
   document.getElementById('results').style.display = 'none';
   document.getElementById('scale-box').classList.remove('show');
   ctr=0; recette=[]; curRec=null;
   updProg(); updScale();
   window.scrollTo({top:0,behavior:'smooth'});
-  toast('Formulaire reinitialise');
+  toast(T('toast_reset'));
 };
 
 // ─── SAVE RECETTE ────────────────────────────────────────────────────
@@ -781,7 +923,7 @@ function renderSaved() {
   var list = document.getElementById('saved-list');
   var saved = getSaved();
   if (!saved.length) {
-    list.innerHTML='<div class="empty"><div class="ei">&#128203;</div><div class="et">Aucune recette</div><div class="es">Calculez une recette et appuyez sur Sauvegarder.</div></div>';
+    list.innerHTML='<div class="empty"><div class="ei">&#128203;</div><div class="et">'+T('no_recipe')+'</div><div class="es">'+T('no_recipe_hint')+'</div></div>';
     return;
   }
   list.innerHTML='';
@@ -790,7 +932,7 @@ function renderSaved() {
     var prev = (r.res||[]).map(function(i){ return '<div class="rc-pi"><span>'+i.nom+'</span><span class="rc-pq">'+i.qty+'</span></div>'; }).join('');
     card.innerHTML=
       '<div class="rc-hdr" onclick="togglePrev('+r.id+')">'+
-        '<div class="rc-l"><div class="rc-name">'+r.nom+'</div><div class="rc-meta">'+r.vol+' mL &middot; '+(r.res||[]).length+' reactif'+((r.res||[]).length>1?'s':'')+' &middot; '+r.date+'</div></div>'+
+        '<div class="rc-l"><div class="rc-name">'+r.nom+'</div><div class="rc-meta">'+r.vol+' mL &middot; '+(r.res||[]).length+' '+T('reagent')+((r.res||[]).length>1?'s':'')+' &middot; '+r.date+'</div></div>'+
         '<div class="rc-r">'+
           '<button class="rc-load" onclick="event.stopPropagation();loadRec('+r.id+')">Charger</button>'+
           '<button class="rc-load" style="background:rgba(0,122,255,0.08);color:var(--blue)" onclick="event.stopPropagation();shareRec('+r.id+')">&#128279;</button>'+
@@ -820,12 +962,12 @@ window.loadRec = function(id) {
 
 window.delRec = function(id) {
   setSaved(getSaved().filter(function(x){return x.id!==id;}));
-  renderSaved(); toast('Recette supprimee');
+  renderSaved(); toast(T('toast_recipe_deleted'));
 };
 
 window.clearAllSaved = function() {
   if (!getSaved().length) return;
-  localStorage.removeItem('buf_rec'); renderSaved(); updSavedBadge(); toast('Tout efface');
+  localStorage.removeItem('buf_rec'); renderSaved(); updSavedBadge(); toast(T('toast_all_cleared'));
 };
 
 // ─── ANTIBODY ────────────────────────────────────────────────────────
@@ -853,7 +995,7 @@ function renderAb() {
   var list = document.getElementById('ab-list');
   var abs  = getAbs();
   if (!abs.length) {
-    list.innerHTML='<div class="empty"><div class="ei">&#128300;</div><div class="et">Aucun anticorps</div><div class="es">Ajoutez vos anticorps pour calculer<br>les volumes de dilution rapidement.</div></div>';
+    list.innerHTML='<div class="empty"><div class="ei">&#128300;</div><div class="et">'+T('no_ab')+'</div><div class="es">'+T('no_ab_hint')+'</div></div>';
     return;
   }
   list.innerHTML = '';
@@ -885,14 +1027,14 @@ function renderAb() {
       '</div>'+
       '<div class="ab-body" id="abb-'+ab.id+'">'+
         (stk ? '<div class="ab-stock-wrap">'+
-          '<div class="ab-slbl"><span>Stock restant</span><span style="font-weight:600;color:'+col+'">'+rem.toFixed(1)+' / '+stk+' uL</span></div>'+
+          '<div class="ab-slbl"><span>'+T('stock_remaining')+'</span><span style="font-weight:600;color:'+col+'">'+rem.toFixed(1)+' / '+stk+' uL</span></div>'+
           '<div class="ab-sbar"><div class="ab-sfill" style="width:'+pct+'%;background:'+col+'"></div></div>'+
         '</div>' : '')+
         '<div class="ab-panel">'+
-          '<div class="ap-ttl">Calcul de dilution</div>'+
+          '<div class="ap-ttl">'+T("ab_calc_dil")+"</div>"+
           // Dilution presets for WB and IF
           '<div class="ap-row">'+
-            '<span class="ap-lbl">Application</span>'+
+            '<span class="ap-lbl">'+T('lbl_application')+'</span>'+
             '<select class="ap-sel" id="ab-app-sel-'+ab.id+'" onchange="prefillDil('+ab.id+')">'+
               '<option value="custom">Manuelle</option>'+
               (ab.dilWB ? '<option value="wb">WB ('+ab.dilWB+')</option>' : '')+
@@ -974,18 +1116,18 @@ window.useAb = function(id) {
   if (!ab) return;
   ab.rem = Math.max(0, ((ab.rem!==undefined)?ab.rem:ab.stock) - volAbUL);
   setAbs(abs); renderAb();
-  toast('Stock mis a jour: '+ab.rem.toFixed(1)+' uL restants');
+  toast(T('toast_stock_updated')+': '+ab.rem.toFixed(1)+' uL '+T('remaining'));
 };
 
 window.delAb = function(id) {
   setAbs(getAbs().filter(function(x){return x.id!==id;}));
-  renderAb(); updAbBadge(); toast('Anticorps supprime');
+  renderAb(); updAbBadge(); toast(T('toast_ab_deleted'));
 };
 
 window.openAbModal = function(id) {
   abEditId = id;
   var isEdit = id !== null;
-  document.getElementById('mo-ab-title').textContent = isEdit ? "Modifier l'anticorps" : "Ajouter un anticorps";
+  document.getElementById('mo-ab-title').textContent = isEdit ? T('mo_edit_ab') : T('mo_add_ab');
   if (isEdit) {
     var ab = getAbs().find(function(x){return x.id===id;});
     if (!ab) return;
@@ -1056,7 +1198,7 @@ function buildShareUrl(rec) {
 }
 
 window.openShareModal = function() {
-  if (!curRec) { toast('Calculez d abord une recette'); return; }
+  if (!curRec) { toast(T('err_calc_first_recipe')); return; }
   showShareModal(curRec);
 };
 
@@ -1077,7 +1219,7 @@ window.closeShareModal = function() { document.getElementById('mo-share').classL
 
 window.copyShareUrl = function() {
   var url = document.getElementById('share-url-box').textContent;
-  navigator.clipboard.writeText(url).then(function(){ toast('Lien copie !'); });
+  navigator.clipboard.writeText(url).then(function(){ toast(T('toast_link_copied')); });
 };
 
 function drawQR(text) {
@@ -1120,7 +1262,7 @@ function checkUrlRecipe() {
     data.i.forEach(function(ing){ addIng(ing); });
     updProg();
     window.history.replaceState({}, '', window.location.pathname);
-    setTimeout(function(){ calculer(); toast('Recette partagee chargee !'); }, 400);
+    setTimeout(function(){ calculer(); toast(T('toast_shared_loaded')); }, 400);
   } catch(e) {}
 }
 
@@ -1137,7 +1279,7 @@ function buildPDFHtml(rec) {
   }).join('');
   return '<div style="font-family:-apple-system,Helvetica Neue,sans-serif;max-width:680px;margin:0 auto;padding:32px 24px;color:#1a1a1a;page-break-inside:avoid">'+
     '<div style="background:linear-gradient(135deg,#007aff,#0055d4);border-radius:16px;padding:24px 28px;color:#fff;margin-bottom:24px">'+
-      '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:6px">Fiche de preparation</div>'+
+      '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:6px">'+T('pdf_prep_sheet')+'</div>'+
       '<div style="font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:16px">'+rec.nom+'</div>'+
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'+
         '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+rec.vol+' mL</div><div style="font-size:11px;opacity:0.7;margin-top:2px">Volume final</div></div>'+
@@ -1147,9 +1289,9 @@ function buildPDFHtml(rec) {
     '</div>'+
     '<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:16px">'+
       '<thead><tr style="background:#f2f4f7">'+
-        '<th style="padding:11px 14px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">Reactif</th>'+
-        '<th style="padding:11px 14px;text-align:right;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">Quantite</th>'+
-        '<th style="padding:11px 14px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">Details</th>'+
+        '<th style="padding:11px 14px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">'+T('pdf_reagent')+'</th>'+
+        '<th style="padding:11px 14px;text-align:right;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">'+T('pdf_qty')+'</th>'+
+        '<th style="padding:11px 14px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">'+T('pdf_details')+'</th>'+
       '</tr></thead>'+
       '<tbody>'+rows+'</tbody>'+
     '</table>'+
@@ -1162,7 +1304,7 @@ function buildPDFHtml(rec) {
 }
 
 window.exportPDF = function() {
-  if (!curRec) { toast('Calculez d abord une recette'); return; }
+  if (!curRec) { toast(T('err_calc_first_recipe')); return; }
   doPDF(curRec);
 };
 
@@ -1182,8 +1324,307 @@ function doPDF(rec) {
   }, 200);
 }
 
+
+// ─── I18N ─────────────────────────────────────────────────────────────
+var LANG = localStorage.getItem('buf_lang') || 'fr';
+
+var I18N = {
+  fr: {
+    tab_calc:'Calculer', tab_saved:'Recettes', tab_ab:'Anticorps', tab_conv:'Conversions',
+    sl_solution:'Solution', rl_name:'Nom', rl_volume:'Volume',
+    sf_vol_hint:"Volume final vise, apres ajout de tous les reactifs et complement a l'eau.",
+    sl_reagents:'Reactifs', btn_add_ing:'+ Ajouter un reactif',
+    btn_calc:'\u2192 Calculer la recette', sl_result:'Resultat',
+    lbl_recalc:'Recalculer pour', btn_apply:'Appliquer',
+    stat_vol:'Volume final', stat_reagents:'Reactifs', stat_types:'Types',
+    qsp_lbl:"Completer a l'eau", qsp_sub:'QSP - ajouter en dernier',
+    btn_copy:'\u2318 Copier', btn_save_rec:'\ud83d\udcbe Sauvegarder',
+    btn_share:'\ud83d\udd17 Partager', btn_pdf:'\ud83d\udcc4 PDF',
+    btn_reset:'\u21bb Recommencer', btn_cancel:'Annuler', btn_save:'Sauvegarder',
+    btn_close:'Fermer', btn_copy_link:'\ud83d\udccb Copier le lien',
+    btn_load:'Charger', btn_remove:'Retirer', btn_add_ab:'+ Ajouter',
+    sl_saved:'Recettes sauvegardees', btn_clear_all:'Tout effacer',
+    sl_antibodies:'Mes anticorps',
+    mo_name_recipe:'Nommer la recette', mo_edit_ab:"Modifier l'anticorps", mo_add_ab:'Ajouter un anticorps',
+    new_reagent:'Nouveau reactif', reagent:'reactif',
+    no_reagent:'Aucun reactif', add_reagent_hint:'Ajoutez vos ingredients ci-dessous',
+    no_recipe:'Aucune recette', no_recipe_hint:'Calculez une recette et appuyez sur Sauvegarder.',
+    no_ab:'Aucun anticorps', no_ab_hint:'Ajoutez vos anticorps pour calculer les volumes rapidement.',
+    stock_type:'Type de stock', type_powder:'Poudre', type_molar:'Stock M',
+    lbl_mw:'Masse mol.', lbl_final_conc:'Conc. finale', lbl_stock:'Stock', lbl_target:'Cible',
+    lbl_application:'Application', stock_remaining:'Stock restant', ab_calc_dil:'Calcul de dilution',
+    err_vol:'Entrez un volume valide', err_add_ing:'Ajoutez au moins un reactif',
+    err_vol_target:'Entrez un volume cible valide', err_check_fields:'Verifiez les champs incomplets',
+    err_calc_first:'Calculez d abord une dilution', err_calc_first_recipe:'Calculez d abord une recette',
+    toast_recalc:'Recette recalculee pour', toast_calc_done:'Recette calculee',
+    toast_reset:'Formulaire reinitialise', toast_recipe_deleted:'Recette supprimee',
+    toast_all_cleared:'Tout efface', toast_ab_deleted:'Anticorps supprime',
+    toast_stock_updated:'Stock mis a jour', toast_link_copied:'Lien copie !',
+    toast_shared_loaded:'Recette partagee chargee !', remaining:'restants',
+    modified:'Modifie :', added:'Ajoute :', copied:'Copie !', btn_copy_txt:'Copier',
+    pdf_prep_sheet:'Fiche de preparation', pdf_date:'Date',
+    pdf_reagent:'Reactif', pdf_qty:'Quantite', pdf_details:'Details',
+    // conversions
+    cv_conc_ttl:'Concentration', cv_conc_sub:'\u00b5g/mL \u2194 mM (avec masse molaire)',
+    cv_ugml_to_nm:'\u00b5g/mL \u2192 mM', cv_nm_to_ugml:'mM \u2192 \u00b5g/mL',
+    cv_mw_lbl:'MW', cv_density_lbl:'Densite',
+    cv_pct_ttl:'% \u2194 Molaire', cv_pct_sub:'Interconversion concentration massique / molaire',
+    cv_pct_to_m:'% \u2192 M', cv_m_to_pct:'M \u2192 %',
+    cv_centri_ttl:'Centrifugation', cv_centri_sub:'RPM \u2194 RCF (\u00d7g) selon rayon rotor',
+    cv_rpm_to_rcf:'RPM \u2192 RCF', cv_rcf_to_rpm:'RCF \u2192 RPM', cv_radius_lbl:'Rayon',
+    cv_temp_ttl:'Temperature', cv_temp_sub:'\u00b0C \u2194 \u00b0F \u2194 K',
+    cv_fill_fields:'Remplissez les champs',
+    share_hint:"Scannez le QR code ou copiez le lien.\nLa recette s'ouvrira directement dans l'app.",
+    share_modal_title:'\ud83d\udd17 Partager la recette',
+  },
+  en: {
+    tab_calc:'Calculate', tab_saved:'Recipes', tab_ab:'Antibodies', tab_conv:'Conversions',
+    sl_solution:'Solution', rl_name:'Name', rl_volume:'Volume',
+    sf_vol_hint:'Final target volume, after adding all reagents and water to volume.',
+    sl_reagents:'Reagents', btn_add_ing:'+ Add a reagent',
+    btn_calc:'\u2192 Calculate recipe', sl_result:'Result',
+    lbl_recalc:'Recalculate for', btn_apply:'Apply',
+    stat_vol:'Final volume', stat_reagents:'Reagents', stat_types:'Types',
+    qsp_lbl:'Bring to volume with water', qsp_sub:'QSV - add last',
+    btn_copy:'\u2318 Copy', btn_save_rec:'\ud83d\udcbe Save',
+    btn_share:'\ud83d\udd17 Share', btn_pdf:'\ud83d\udcc4 PDF',
+    btn_reset:'\u21bb Start over', btn_cancel:'Cancel', btn_save:'Save',
+    btn_close:'Close', btn_copy_link:'\ud83d\udccb Copy link',
+    btn_load:'Load', btn_remove:'Remove', btn_add_ab:'+ Add',
+    sl_saved:'Saved recipes', btn_clear_all:'Clear all',
+    sl_antibodies:'My antibodies',
+    mo_name_recipe:'Name the recipe', mo_edit_ab:'Edit antibody', mo_add_ab:'Add antibody',
+    new_reagent:'New reagent', reagent:'reagent',
+    no_reagent:'No reagents', add_reagent_hint:'Add your ingredients below',
+    no_recipe:'No recipes', no_recipe_hint:'Calculate a recipe and press Save.',
+    no_ab:'No antibodies', no_ab_hint:'Add your antibodies to quickly calculate dilution volumes.',
+    stock_type:'Stock type', type_powder:'Powder', type_molar:'Molar stock',
+    lbl_mw:'Mol. weight', lbl_final_conc:'Final conc.', lbl_stock:'Stock', lbl_target:'Target',
+    lbl_application:'Application', stock_remaining:'Remaining stock', ab_calc_dil:'Dilution calculator',
+    err_vol:'Enter a valid volume', err_add_ing:'Add at least one reagent',
+    err_vol_target:'Enter a valid target volume', err_check_fields:'Check incomplete fields',
+    err_calc_first:'Calculate a dilution first', err_calc_first_recipe:'Calculate a recipe first',
+    toast_recalc:'Recipe recalculated for', toast_calc_done:'Recipe calculated',
+    toast_reset:'Form reset', toast_recipe_deleted:'Recipe deleted',
+    toast_all_cleared:'All cleared', toast_ab_deleted:'Antibody deleted',
+    toast_stock_updated:'Stock updated', toast_link_copied:'Link copied!',
+    toast_shared_loaded:'Shared recipe loaded!', remaining:'remaining',
+    modified:'Edited:', added:'Added:', copied:'Copied!', btn_copy_txt:'Copy',
+    pdf_prep_sheet:'Preparation sheet', pdf_date:'Date',
+    pdf_reagent:'Reagent', pdf_qty:'Quantity', pdf_details:'Details',
+    // conversions
+    cv_conc_ttl:'Concentration', cv_conc_sub:'\u00b5g/mL \u2194 mM (with molecular weight)',
+    cv_ugml_to_nm:'\u00b5g/mL \u2192 mM', cv_nm_to_ugml:'mM \u2192 \u00b5g/mL',
+    cv_mw_lbl:'MW', cv_density_lbl:'Density',
+    cv_pct_ttl:'% \u2194 Molar', cv_pct_sub:'Mass / molar concentration interconversion',
+    cv_pct_to_m:'% \u2192 M', cv_m_to_pct:'M \u2192 %',
+    cv_centri_ttl:'Centrifugation', cv_centri_sub:'RPM \u2194 RCF (\u00d7g) by rotor radius',
+    cv_rpm_to_rcf:'RPM \u2192 RCF', cv_rcf_to_rpm:'RCF \u2192 RPM', cv_radius_lbl:'Radius',
+    cv_temp_ttl:'Temperature', cv_temp_sub:'\u00b0C \u2194 \u00b0F \u2194 K',
+    cv_fill_fields:'Fill in the fields',
+    share_hint:"Scan the QR code or copy the link.\nThe recipe will open directly in the app.",
+    share_modal_title:'\ud83d\udd17 Share recipe',
+  }
+};
+
+function T(key) {
+  return (I18N[LANG] && I18N[LANG][key]) || (I18N['fr'][key]) || key;
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n');
+    var val = T(key);
+    // preserve inner badges/spans (saved-badge, ab-badge)
+    if (el.children.length === 0) {
+      el.textContent = val;
+    } else {
+      // only update first text node
+      var tn = el.childNodes[0];
+      if (tn && tn.nodeType === 3) tn.textContent = val + ' ';
+    }
+  });
+  // update lang button
+  var btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = LANG === 'fr' ? 'EN' : 'FR';
+  // update html lang attr
+  document.documentElement.lang = LANG;
+  // update placeholder on sol_name (no data-i18n on input, handle directly)
+  var sn = document.getElementById('sol_name');
+  if (sn) sn.placeholder = LANG === 'fr' ? 'ex. PBS 1x, Lysis buffer...' : 'e.g. PBS 1x, Lysis buffer...';
+  // update static nav-step if no reagents
+  var ns = document.getElementById('nav-step');
+  if (ns && (ns.textContent === '0 reactif' || ns.textContent === '0 reagent'))
+    ns.textContent = '0 ' + T('reagent');
+  // update conv direction labels
+  var cvFills = [
+    ['cv-conc-lbl', cvConcDirState===1?'\u00b5g/mL':'mM'],
+    ['cv-pct-lbl',  cvPctDirState===1?'%':'M'],
+    ['cv-rpm-lbl',  cvRpmDirState===1?'RPM':'RCF'],
+  ];
+  cvFills.forEach(function(p){
+    var e = document.getElementById(p[0]); if(e) e.textContent=p[1];
+  });
+  // share modal hint
+  var sh = document.querySelector('.share-hint');
+  if (sh) sh.innerHTML = T('share_hint').replace('\n','<br>');
+  var st = document.querySelector('#mo-share .mo-title');
+  if (st) st.innerHTML = T('share_modal_title');
+}
+
+window.toggleLang = function() {
+  LANG = LANG === 'fr' ? 'en' : 'fr';
+  localStorage.setItem('buf_lang', LANG);
+  applyI18n();
+  updProg();
+  renderSaved();
+  renderAb();
+};
+
+// ─── CONVERSIONS ──────────────────────────────────────────────────────
+var cvConcDirState = 1, cvPctDirState = 1, cvRpmDirState = 1;
+
+function cvFmt(v) {
+  if (!isFinite(v) || v <= 0) return null;
+  if (v >= 1e9)  return (v/1e9).toPrecision(4)+' G';
+  if (v >= 1e6)  return (v/1e6).toPrecision(4)+' M';
+  if (v >= 1000) return (v/1000).toPrecision(4)+' k';
+  if (v >= 1)    return v.toPrecision(5).replace(/\.?0+$/,'');
+  if (v >= 0.001) return (v*1000).toPrecision(4)+' m';
+  if (v >= 1e-6)  return (v*1e6).toPrecision(4)+' \u00b5';
+  return (v*1e9).toPrecision(4)+' n';
+}
+
+function setRes(id, val, unit) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (val === null) {
+    el.innerHTML = '<span class="cv-res-err">'+T('cv_fill_fields')+'</span>';
+  } else {
+    el.innerHTML = '<span class="cv-res-val">'+val+'</span><span class="cv-res-unit">'+unit+'</span>';
+  }
+}
+
+// µg/mL <-> nM
+window.cvConcDir = function(d) {
+  cvConcDirState = d;
+  document.getElementById('cv-conc-d1').classList.toggle('active', d===1);
+  document.getElementById('cv-conc-d2').classList.toggle('active', d===2);
+  var lbl = d===1 ? '\u00b5g/mL' : 'mM';
+  document.getElementById('cv-conc-lbl').textContent = lbl;
+  document.getElementById('cv-conc-in-u').textContent = lbl;
+  document.getElementById('cv-conc-in').value = '';
+  document.getElementById('cv-conc-in').placeholder = d===1 ? '1000' : '0.015';
+  setRes('cv-conc-res', null, '');
+};
+window.cvConc = function() {
+  var mw  = parseFloat(document.getElementById('cv-mw').value);
+  var val = parseFloat(document.getElementById('cv-conc-in').value);
+  if (!mw || !val || mw<=0 || val<=0) { setRes('cv-conc-res',null,''); return; }
+  var res, unit;
+  if (cvConcDirState === 1) {
+    // µg/mL -> mM : val / mw  (1 µg/mL = 1/MW mM)
+    res = val / mw;
+    var disp = res >= 1 ? res.toPrecision(4)+' mM' : res >= 0.001 ? (res*1000).toPrecision(4)+' \u00b5M' : (res*1e6).toPrecision(3)+' nM';
+    setRes('cv-conc-res', disp, '');
+  } else {
+    // mM -> µg/mL : val * mw
+    res = val * mw;
+    var disp2 = res >= 1 ? res.toPrecision(4)+' \u00b5g/mL' : (res*1000).toPrecision(3)+' ng/mL';
+    setRes('cv-conc-res', disp2, '');
+  }
+};
+
+// % <-> M
+window.cvPctDir = function(d) {
+  cvPctDirState = d;
+  document.getElementById('cv-pct-d1').classList.toggle('active', d===1);
+  document.getElementById('cv-pct-d2').classList.toggle('active', d===2);
+  var lbl = d===1 ? '%' : 'M';
+  document.getElementById('cv-pct-lbl').textContent = lbl;
+  document.getElementById('cv-pct-in-u').textContent = lbl;
+  document.getElementById('cv-pct-in').value = '';
+  document.getElementById('cv-pct-in').placeholder = d===1 ? '96' : '18.4';
+  setRes('cv-pct-res', null, '');
+};
+window.cvPct = function() {
+  var mw   = parseFloat(document.getElementById('cv-pct-mw').value);
+  var dens = parseFloat(document.getElementById('cv-pct-dens').value);
+  var val  = parseFloat(document.getElementById('cv-pct-in').value);
+  if (!mw || !dens || !val || mw<=0 || dens<=0 || val<=0) { setRes('cv-pct-res',null,''); return; }
+  var res, disp;
+  if (cvPctDirState === 1) {
+    // % w/w -> M : (pct/100 * dens * 1000) / mw
+    res = (val/100 * dens * 1000) / mw;
+    disp = res.toPrecision(4)+' M  (\u2248 '+( res*1000).toPrecision(4)+' mM)';
+    setRes('cv-pct-res', disp, '');
+  } else {
+    // M -> % : (val * mw) / (dens * 10)
+    res = (val * mw) / (dens * 10);
+    disp = res.toPrecision(4)+' %';
+    setRes('cv-pct-res', disp, '');
+  }
+};
+
+// RPM <-> RCF
+window.cvRpmDir = function(d) {
+  cvRpmDirState = d;
+  document.getElementById('cv-rpm-d1').classList.toggle('active', d===1);
+  document.getElementById('cv-rpm-d2').classList.toggle('active', d===2);
+  var lbl = d===1 ? 'RPM' : 'RCF';
+  document.getElementById('cv-rpm-lbl').textContent = lbl;
+  document.getElementById('cv-rpm-in-u').textContent = lbl;
+  document.getElementById('cv-rpm-in').value = '';
+  document.getElementById('cv-rpm-in').placeholder = d===1 ? '13000' : '16000';
+  setRes('cv-rpm-res', null, '');
+};
+window.cvRpm = function() {
+  var r   = parseFloat(document.getElementById('cv-rpm-r').value);
+  var val = parseFloat(document.getElementById('cv-rpm-in').value);
+  if (!r || !val || r<=0 || val<=0) { setRes('cv-rpm-res',null,''); return; }
+  var res, disp;
+  if (cvRpmDirState === 1) {
+    // RCF = 1.118 * r * (rpm/1000)^2
+    res = 1.118 * r * Math.pow(val/1000, 2) * 1e3; // keep it in g
+    // RCF = 11.2 × r × (RPM/1000)²
+    res = Math.round(11.2 * r * Math.pow(val/1000, 2));
+    disp = res.toLocaleString() + ' \u00d7g';
+    setRes('cv-rpm-res', disp, '');
+  } else {
+    // RPM = 1000 × sqrt(RCF / (11.2 × r))
+    res = Math.round(1000 * Math.sqrt(val / (11.2 * r)));
+    disp = res.toLocaleString() + ' RPM';
+    setRes('cv-rpm-res', disp, '');
+  }
+};
+
+// Temperature
+var cvTempUpdating = false;
+window.cvTempFrom = function(from) {
+  if (cvTempUpdating) return;
+  cvTempUpdating = true;
+  var vc = parseFloat(document.getElementById('cv-tc').value);
+  var vf = parseFloat(document.getElementById('cv-tf').value);
+  var vk = parseFloat(document.getElementById('cv-tk').value);
+  var c, f, k;
+  if (from === 'c' && !isNaN(vc)) {
+    c=vc; f=vc*9/5+32; k=vc+273.15;
+  } else if (from === 'f' && !isNaN(vf)) {
+    f=vf; c=(vf-32)*5/9; k=c+273.15;
+  } else if (from === 'k' && !isNaN(vk)) {
+    k=vk; c=vk-273.15; f=c*9/5+32;
+  } else {
+    cvTempUpdating=false; return;
+  }
+  function r4(n){ return parseFloat(n.toFixed(4)); }
+  if (from!=='c') document.getElementById('cv-tc').value = r4(c);
+  if (from!=='f') document.getElementById('cv-tf').value = r4(f);
+  if (from!=='k') document.getElementById('cv-tk').value = r4(k);
+  cvTempUpdating = false;
+};
+
 // ─── INIT ─────────────────────────────────────────────────────────────
-updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe();
+updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe(); applyI18n();
 
 })();
 </script>
