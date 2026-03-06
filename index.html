@@ -4,10 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Buffer Calc</title>
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#007aff">
-<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
 :root {
@@ -222,6 +218,21 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 .toast { position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(80px); background:rgba(50,50,50,0.92); backdrop-filter:blur(20px); color:#fff; font-size:14px; font-weight:500; padding:10px 18px; border-radius:100px; z-index:400; transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s; opacity:0; white-space:nowrap; pointer-events:none; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 
+
+/* SHARE + PDF */
+.share-url-box { background:var(--bg); border:1px solid var(--sep-o); border-radius:12px; padding:12px 14px; font-family:monospace; font-size:12px; color:var(--l2); word-break:break-all; line-height:1.5; margin-bottom:12px; max-height:80px; overflow-y:auto; }
+.qr-wrap { display:flex; justify-content:center; margin:16px 0 8px; }
+.qr-wrap canvas { border-radius:12px; }
+.share-hint { font-size:13px; color:var(--l2); text-align:center; margin-bottom:14px; line-height:1.4; }
+.btn-share { padding:14px; background:linear-gradient(135deg,#007aff,#32ade6); color:#fff; border:none; border-radius:var(--r); font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-bottom:8px; }
+.btn-pdf { padding:14px; background:linear-gradient(135deg,#ff3b30,#ff6b00); color:#fff; border:none; border-radius:var(--r); font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; }
+@media print {
+  html, body { margin:0; padding:0; }
+  body > * { display:none !important; }
+  #pdf-zone { display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; background:#fff !important; page-break-after:avoid; }
+}
+#pdf-zone { display:none; }
+
 @keyframes sli { from{opacity:0;transform:translateY(10px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
 </style>
 </head>
@@ -311,13 +322,17 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
     <div class="qsp-row">
       <div class="qsp-l">
         <div class="qsp-ico">&#128167;</div>
-        <div><div class="qsp-lbl">Completer a l'eau</div><div class="qsp-sub">QSP - ajouter en dernier</div></div>
+        <div><div class="qsp-lbl">Completer a l&#39;eau</div><div class="qsp-sub">QSP - ajouter en dernier</div></div>
       </div>
       <span class="qsp-val" id="qsp-val"></span>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
       <button class="btn-act" id="copy-btn" onclick="copyRecette()">&#8983; Copier</button>
       <button class="btn-save" onclick="openSaveModal()">&#128190; Sauvegarder</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+      <button class="btn-share" onclick="openShareModal()">&#128279; Partager</button>
+      <button class="btn-pdf" onclick="exportPDF()">&#128196; PDF</button>
     </div>
     <button class="btn-rst" style="width:100%;margin-top:10px" onclick="resetForm()">&#8635; Recommencer</button>
   </div>
@@ -399,6 +414,20 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
   </div>
 </div>
 
+
+<!-- MODAL PARTAGE -->
+<div class="mo" id="mo-share" onclick="if(event.target===this)closeShareModal()">
+  <div class="mo-box">
+    <div class="mo-handle"></div>
+    <div class="mo-title">&#128279; Partager la recette</div>
+    <div class="qr-wrap"><canvas id="qr-canvas" width="200" height="200"></canvas></div>
+    <div class="share-hint">Scannez le QR code ou copiez le lien.<br>La recette s'ouvrira directement dans l'app.</div>
+    <div class="share-url-box" id="share-url-box"></div>
+    <button class="btn-share" onclick="copyShareUrl()">&#128203; Copier le lien</button>
+    <button class="mo-btn mo-cancel" style="width:100%;margin-top:8px" onclick="closeShareModal()">Fermer</button>
+  </div>
+</div>
+<div id="pdf-zone"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -691,7 +720,7 @@ window.copyRecette = function() {
   var nom = document.getElementById('sol_name').value || 'Solution';
   var t = nom+' -- '+vol+' mL\n'+'--'.repeat(20)+'\n';
   recette.forEach(function(i){ t += (i.nom+':').padEnd(24)+i.qty.padEnd(14)+i.det+'\n'; });
-  t += '--'.repeat(20)+'\nCompleter a l\'eau QSP '+vol+' mL';
+  t += '--'.repeat(20)+'\nCompleter a l&#39;eau QSP '+vol+' mL';
   navigator.clipboard.writeText(t).then(function(){
     var b = document.getElementById('copy-btn');
     b.classList.add('ok'); b.textContent = 'Copie !';
@@ -760,6 +789,8 @@ function renderSaved() {
         '<div class="rc-l"><div class="rc-name">'+r.nom+'</div><div class="rc-meta">'+r.vol+' mL &middot; '+(r.res||[]).length+' reactif'+((r.res||[]).length>1?'s':'')+' &middot; '+r.date+'</div></div>'+
         '<div class="rc-r">'+
           '<button class="rc-load" onclick="event.stopPropagation();loadRec('+r.id+')">Charger</button>'+
+          '<button class="rc-load" style="background:rgba(0,122,255,0.08);color:var(--blue)" onclick="event.stopPropagation();shareRec('+r.id+')">&#128279;</button>'+
+          '<button class="rc-load" style="background:rgba(255,59,48,0.1);color:var(--red)" onclick="event.stopPropagation();pdfRec('+r.id+')">&#128196;</button>'+
           '<button class="rc-del" onclick="event.stopPropagation();delRec('+r.id+')">&#x2715;</button>'+
         '</div>'+
       '</div>'+
@@ -1011,23 +1042,147 @@ window.saveAb = function() {
   toast((abEditId?'Modifie: ':'')+'"'+nom+'"'+(abEditId?'':' ajoute'));
 };
 
+
+// ─── SHARE ────────────────────────────────────────────────────────────
+function buildShareUrl(rec) {
+  var data = { n: rec.nom, v: rec.vol, i: rec.ings };
+  var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  var base = window.location.href.split('?')[0].split('#')[0];
+  return base + '?r=' + encoded;
+}
+
+window.openShareModal = function() {
+  if (!curRec) { toast('Calculez d abord une recette'); return; }
+  showShareModal(curRec);
+};
+
+window.shareRec = function(id) {
+  var r = getSaved().find(function(x){return x.id===id;});
+  if (!r) return;
+  showShareModal({nom:r.nom, vol:r.vol, ings:r.ings, res:r.res});
+};
+
+function showShareModal(rec) {
+  var url = buildShareUrl(rec);
+  document.getElementById('share-url-box').textContent = url;
+  document.getElementById('mo-share').classList.add('show');
+  setTimeout(function(){ drawQR(url); }, 150);
+}
+
+window.closeShareModal = function() { document.getElementById('mo-share').classList.remove('show'); };
+
+window.copyShareUrl = function() {
+  var url = document.getElementById('share-url-box').textContent;
+  navigator.clipboard.writeText(url).then(function(){ toast('Lien copie !'); });
+};
+
+function drawQR(text) {
+  var canvas = document.getElementById('qr-canvas');
+  if (!canvas) return;
+  if (typeof QRCode !== 'undefined') { renderQR(canvas, text); return; }
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  s.onload = function(){ renderQR(canvas, text); };
+  document.head.appendChild(s);
+}
+
+function renderQR(canvas, text) {
+  canvas.width = 200; canvas.height = 200;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,200,200);
+  var div = document.createElement('div');
+  new QRCode(div, { text:text, width:200, height:200, colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.M });
+  setTimeout(function(){
+    var el = div.querySelector('canvas');
+    if (el) ctx.drawImage(el,0,0,200,200);
+    else {
+      el = div.querySelector('img');
+      if (el) { var i=new Image(); i.onload=function(){ctx.drawImage(i,0,0,200,200);}; i.src=el.src; }
+    }
+  }, 400);
+}
+
+function checkUrlRecipe() {
+  var params = new URLSearchParams(window.location.search);
+  var r = params.get('r');
+  if (!r) return;
+  try {
+    var data = JSON.parse(decodeURIComponent(escape(atob(r))));
+    if (!data.n || !data.v || !data.i) return;
+    document.getElementById('sol_name').value = data.n;
+    document.getElementById('vol_total').value = data.v;
+    document.getElementById('ing-container').innerHTML = '';
+    ctr = 0; recette = [];
+    data.i.forEach(function(ing){ addIng(ing); });
+    updProg();
+    window.history.replaceState({}, '', window.location.pathname);
+    setTimeout(function(){ calculer(); toast('Recette partagee chargee !'); }, 400);
+  } catch(e) {}
+}
+
+// ─── PDF ──────────────────────────────────────────────────────────────
+function buildPDFHtml(rec) {
+  var date = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  var rows = (rec.res||[]).map(function(item,i){
+    var bg = i%2===0 ? '#f8f9fb' : '#ffffff';
+    return '<tr style="background:'+bg+'">'+
+      '<td style="padding:10px 14px;font-weight:500">'+item.nom+'</td>'+
+      '<td style="padding:10px 14px;font-weight:700;color:#007aff;text-align:right;white-space:nowrap">'+item.qty+'</td>'+
+      '<td style="padding:10px 14px;color:#666;font-size:12px">'+item.det+'</td>'+
+    '</tr>';
+  }).join('');
+  return '<div style="font-family:-apple-system,Helvetica Neue,sans-serif;max-width:680px;margin:0 auto;padding:32px 24px;color:#1a1a1a;page-break-inside:avoid">'+
+    '<div style="background:linear-gradient(135deg,#007aff,#0055d4);border-radius:16px;padding:24px 28px;color:#fff;margin-bottom:24px">'+
+      '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:6px">Fiche de preparation</div>'+
+      '<div style="font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:16px">'+rec.nom+'</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'+
+        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+rec.vol+' mL</div><div style="font-size:11px;opacity:0.7;margin-top:2px">Volume final</div></div>'+
+        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+(rec.res||[]).length+'</div><div style="font-size:11px;opacity:0.7;margin-top:2px">Reactifs</div></div>'+
+        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+date+'</div><div style="font-size:11px;opacity:0.7;margin-top:2px">Date</div></div>'+
+      '</div>'+
+    '</div>'+
+    '<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:16px">'+
+      '<thead><tr style="background:#f2f4f7">'+
+        '<th style="padding:11px 14px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">Reactif</th>'+
+        '<th style="padding:11px 14px;text-align:right;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">Quantite</th>'+
+        '<th style="padding:11px 14px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">Details</th>'+
+      '</tr></thead>'+
+      '<tbody>'+rows+'</tbody>'+
+    '</table>'+
+    '<div style="background:#efffef;border:1px solid rgba(52,199,89,0.3);border-radius:12px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">'+
+      '<div><div style="font-size:15px;font-weight:600;color:#1a7a35">Completer \u00e0 l&#39;eau (QSP)</div><div style="font-size:12px;color:#4a9a5a;margin-top:2px">Ajouter en dernier</div></div>'+
+      '<div style="font-size:18px;font-weight:700;color:#1a7a35">'+rec.vol+' mL</div>'+
+    '</div>'+
+    '<div style="text-align:center;font-size:11px;color:#aaa">Buffer Calculator &bull; '+date+'</div>'+
+  '</div>';
+}
+
+window.exportPDF = function() {
+  if (!curRec) { toast('Calculez d abord une recette'); return; }
+  doPDF(curRec);
+};
+
+window.pdfRec = function(id) {
+  var r = getSaved().find(function(x){return x.id===id;});
+  if (!r) return;
+  doPDF({nom:r.nom, vol:r.vol, ings:r.ings, res:r.res});
+};
+
+function doPDF(rec) {
+  var zone = document.getElementById('pdf-zone');
+  zone.innerHTML = buildPDFHtml(rec);
+  zone.style.display = 'block';
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){ zone.style.display='none'; zone.innerHTML=''; }, 800);
+  }, 200);
+}
+
 // ─── INIT ─────────────────────────────────────────────────────────────
-updProg(); updSavedBadge(); updAbBadge();
+updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe();
 
 })();
 </script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(registration => {
-          console.log('ServiceWorker enregistré avec succès:', registration.scope);
-        })
-        .catch(error => {
-          console.log('Échec de l\'enregistrement du ServiceWorker:', error);
-        });
-    });
-  }
-</script>
+<!-- ServiceWorker disabled: only works when self-hosted -->
 </body>
 </html>
