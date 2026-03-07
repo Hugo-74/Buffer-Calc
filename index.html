@@ -317,8 +317,8 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
     <div id="ing-container">
       <div class="empty" id="ing-empty" style="padding:28px 20px">
         <div class="ei" style="font-size:36px">&#9879;&#65039;</div>
-        <div class="et" style="font-size:17px">Aucun reactif</div>
-        <div class="es">Ajoutez vos ingredients ci-dessous</div>
+        <div class="et" style="font-size:17px" data-i18n="no_reagent">Aucun reactif</div>
+        <div class="es" data-i18n="add_reagent_hint">Ajoutez vos ingredients ci-dessous</div>
       </div>
     </div>
     <button class="btn-add" onclick="addIng()"><span data-i18n="btn_add_ing">+ Ajouter un reactif</span></button>
@@ -526,32 +526,32 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
     <div class="mo-handle"></div>
     <div class="mo-title" id="mo-ab-title">Ajouter un anticorps</div>
     <div class="ab-type-seg">
-      <button class="ab-tsb active" id="abt-primary" onclick="setAbType('primary')">Primaire</button>
-      <button class="ab-tsb" id="abt-secondary" onclick="setAbType('secondary')">Secondaire</button>
-      <button class="ab-tsb" id="abt-other" onclick="setAbType('other')">Autre</button>
+      <button class="ab-tsb active" id="abt-primary" onclick="setAbType('primary')" data-i18n="ab_primary">Primaire</button>
+      <button class="ab-tsb" id="abt-secondary" onclick="setAbType('secondary')" data-i18n="ab_secondary">Secondaire</button>
+      <button class="ab-tsb" id="abt-other" onclick="setAbType('other')" data-i18n="ab_other">Autre</button>
     </div>
     <div class="ab-grid">
-      <div class="ab-field full"><label>Nom / Cible *</label><input class="ab-finp" id="abf-nom" placeholder="ex. Anti-GAPDH, Anti-rabbit HRP..."></div>
-      <div class="ab-field"><label>Reference / Clone</label><input class="ab-finp" id="abf-ref" placeholder="ex. ab8245, 6C5"></div>
-      <div class="ab-field"><label>Fournisseur</label><input class="ab-finp" id="abf-four" placeholder="ex. Abcam, CST"></div>
-      <div class="ab-field"><label>Hote</label>
+      <div class="ab-field full"><label data-i18n="ab_lbl_name">Nom / Cible *</label><input class="ab-finp" id="abf-nom" placeholder="ex. Anti-GAPDH, Anti-rabbit HRP..."></div>
+      <div class="ab-field"><label data-i18n="ab_lbl_ref">Reference / Clone</label><input class="ab-finp" id="abf-ref" placeholder="ex. ab8245, 6C5"></div>
+      <div class="ab-field"><label data-i18n="ab_lbl_supplier">Fournisseur</label><input class="ab-finp" id="abf-four" placeholder="ex. Abcam, CST"></div>
+      <div class="ab-field"><label data-i18n="ab_lbl_host">Hote</label>
         <select class="ab-finp" id="abf-hote">
           <option value="">--</option>
           <option>Mouse</option><option>Rabbit</option><option>Goat</option>
           <option>Donkey</option><option>Rat</option>
         </select>
       </div>
-      <div class="ab-field"><label>Application</label>
+      <div class="ab-field"><label data-i18n="ab_lbl_app">Application</label>
         <select class="ab-finp" id="abf-app">
           <option value="">--</option>
           <option>WB</option><option>IF</option><option>IHC</option>
           <option>ELISA</option><option>IP</option><option>FC</option>
         </select>
       </div>
-      <div class="ab-field"><label>Dilution (WB)</label><input class="ab-finp" id="abf-dil-wb" placeholder="ex. 1:1000"></div>
-      <div class="ab-field"><label>Dilution (IF)</label><input class="ab-finp" id="abf-dil-if" placeholder="ex. 1:500"></div>
-      <div class="ab-field"><label>Stock restant (uL)</label><input class="ab-finp" type="number" id="abf-stock" placeholder="ex. 100"></div>
-      <div class="ab-field full"><label>Notes (conditions, blocage...)</label><input class="ab-finp" id="abf-notes" placeholder="ex. 1h RT, 5% lait TBST, overnight 4C..."></div>
+      <div class="ab-field"><label data-i18n="ab_lbl_dil_wb">Dilution (WB)</label><input class="ab-finp" id="abf-dil-wb" placeholder="ex. 1:1000"></div>
+      <div class="ab-field"><label data-i18n="ab_lbl_dil_if">Dilution (IF)</label><input class="ab-finp" id="abf-dil-if" placeholder="ex. 1:500"></div>
+      <div class="ab-field"><label data-i18n="ab_lbl_stock">Stock restant (uL)</label><input class="ab-finp" type="number" id="abf-stock" placeholder="ex. 100"></div>
+      <div class="ab-field full"><label data-i18n="ab_lbl_notes">Notes (conditions, blocage...)</label><input class="ab-finp" id="abf-notes" placeholder="ex. 1h RT, 5% lait TBST, overnight 4C..."></div>
     </div>
     <div class="mo-acts">
       <button class="mo-btn mo-cancel" onclick="closeAbModal()"><span data-i18n="btn_cancel">Annuler</span></button>
@@ -692,27 +692,27 @@ function addIng(data) {
     '<div class="row">'+
       '<div class="ri '+cc+'">'+ico+'</div>'+
       '<span class="rl" data-i18n="rl_name">Nom</span>'+
-      '<div class="rr" style="flex:1"><input type="text" id="n-'+id+'" placeholder="ex. NaCl, Anti-rabbit HRP..." oninput="updTtl('+id+')" value="'+(data&&data.nom?data.nom:'')+'"></div>'+
+      '<div class="rr" style="flex:1"><input type="text" id="n-'+id+'" placeholder="'+T('ing_name_ph')+'" oninput="updTtl('+id+')" value="'+(data&&data.nom?data.nom:'')+'"></div>'+
     '</div>'+
     '<div class="seg-wrap">'+
-      '<div class="seg-lbl">Type de stock</div>'+
+      '<div class="seg-lbl">'+T('stock_type')+'</div>'+
       '<div class="segment">'+
-        '<button class="sb '+(tp==='poudre'?'active':'')+'" id="bt-poudre-'+id+'" onclick="setItp('+id+',\'poudre\')"><span>&#129514;</span>Poudre</button>'+
-        '<button class="sb '+(tp==='molaire'?'active':'')+'" id="bt-molaire-'+id+'" onclick="setItp('+id+',\'molaire\')"><span>&#9879;&#65039;</span>Stock M</button>'+
-        '<button class="sb '+(tp==='pct'?'active':'')+'" id="bt-pct-'+id+'" onclick="setItp('+id+',\'pct\')"><span>&#128167;</span>Stock %</button>'+
+        '<button class="sb '+(tp==='poudre'?'active':'')+'" id="bt-poudre-'+id+'" onclick="setItp('+id+',\'poudre\')"><span>&#129514;</span>'+T('type_powder')+'</button>'+
+        '<button class="sb '+(tp==='molaire'?'active':'')+'" id="bt-molaire-'+id+'" onclick="setItp('+id+',\'molaire\')"><span>&#9879;&#65039;</span>'+T('type_molar')+'</button>'+
+        '<button class="sb '+(tp==='pct'?'active':'')+'" id="bt-pct-'+id+'" onclick="setItp('+id+',\'pct\')"><span>&#128167;</span>'+T('type_pct')+'</button>'+
       '</div>'+
     '</div>'+
     '<div class="if '+(tp==='poudre'?'show':'')+'" id="fp-'+id+'">'+
-      '<div class="row"><div class="ri" style="background:#f2f2f7">&#9878;&#65039;</div><span class="rl">Masse mol.</span><div class="rr"><input type="number" id="mw-'+id+'" placeholder="58.44" min="0" step="any" style="width:80px" value="'+(data&&data.type==='poudre'?data.p1:'')+'"><span class="unit">g/mol</span></div></div>'+
-      '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div><span class="rl">Conc. finale</span><div class="rr"><input type="number" id="cp-'+id+'" placeholder="150" min="0" step="any" style="width:70px" value="'+(data&&data.type==='poudre'?data.p2:'')+'"><select class="usel" id="up-'+id+'">'+unitOpts(data&&data.type==='poudre'?data.u2:'mM')+'</select></div></div>'+
+      '<div class="row"><div class="ri" style="background:#f2f2f7">&#9878;&#65039;</div>'+T('lbl_mw')+'  <div class="rr"><input type="number" id="mw-'+id+'" placeholder="58.44" min="0" step="any" style="width:80px" value="'+(data&&data.type==='poudre'?data.p1:'')+'"><span class="unit">g/mol</span></div></div>'+
+      '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div>'+T('lbl_final_conc')+'  <div class="rr"><input type="number" id="cp-'+id+'" placeholder="150" min="0" step="any" style="width:70px" value="'+(data&&data.type==='poudre'?data.p2:'')+'"><select class="usel" id="up-'+id+'">'+unitOpts(data&&data.type==='poudre'?data.u2:'mM')+'</select></div></div>'+
     '</div>'+
     '<div class="if '+(tp==='molaire'?'show':'')+'" id="fm-'+id+'">'+
-      '<div class="row"><div class="ri" style="background:#f2f2f7">&#128230;</div><span class="rl">Stock</span><div class="rr"><input type="number" id="sm-'+id+'" placeholder="1000" min="0" step="any" style="width:70px" value="'+(data&&data.type==='molaire'?data.p1:'')+'"><select class="usel" id="us-'+id+'" onchange="syncU('+id+')">'+unitOpts(data&&data.type==='molaire'?data.u1:'mM')+'</select></div></div>'+
-      '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div><span class="rl">Cible</span><div class="rr"><input type="number" id="cm-'+id+'" placeholder="10" min="0" step="any" style="width:70px" value="'+(data&&data.type==='molaire'?data.p2:'')+'"><select class="usel" id="uc-'+id+'">'+unitOpts(data&&data.type==='molaire'?data.u2:'mM')+'</select></div></div>'+
+      '<div class="row"><div class="ri" style="background:#f2f2f7">&#128230;</div>'+T('lbl_stock')+'  <div class="rr"><input type="number" id="sm-'+id+'" placeholder="1000" min="0" step="any" style="width:70px" value="'+(data&&data.type==='molaire'?data.p1:'')+'"><select class="usel" id="us-'+id+'" onchange="syncU('+id+')">'+unitOpts(data&&data.type==='molaire'?data.u1:'mM')+'</select></div></div>'+
+      '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div>'+T('lbl_target')+'  <div class="rr"><input type="number" id="cm-'+id+'" placeholder="10" min="0" step="any" style="width:70px" value="'+(data&&data.type==='molaire'?data.p2:'')+'"><select class="usel" id="uc-'+id+'">'+unitOpts(data&&data.type==='molaire'?data.u2:'mM')+'</select></div></div>'+
     '</div>'+
     '<div class="if '+(tp==='pct'?'show':'')+'" id="ft-'+id+'">'+
-      '<div class="row"><div class="ri" style="background:#f2f2f7">&#128230;</div><span class="rl">Stock</span><div class="rr"><input type="number" id="sp-'+id+'" placeholder="100" min="0" step="any" style="width:80px" value="'+(data&&data.type==='pct'?data.p1:'')+'"><span class="unit">%</span></div></div>'+
-      '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div><span class="rl">Cible</span><div class="rr"><input type="number" id="xp-'+id+'" placeholder="0.1" min="0" step="any" style="width:80px" value="'+(data&&data.type==='pct'?data.p2:'')+'"><span class="unit">%</span></div></div>'+
+      '<div class="row"><div class="ri" style="background:#f2f2f7">&#128230;</div>'+T('lbl_stock')+'  <div class="rr"><input type="number" id="sp-'+id+'" placeholder="100" min="0" step="any" style="width:80px" value="'+(data&&data.type==='pct'?data.p1:'')+'"><span class="unit">%</span></div></div>'+
+      '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div>'+T('lbl_target')+'  <div class="rr"><input type="number" id="xp-'+id+'" placeholder="0.1" min="0" step="any" style="width:80px" value="'+(data&&data.type==='pct'?data.p2:'')+'"><span class="unit">%</span></div></div>'+
     '</div>';
   document.getElementById('ing-container').appendChild(d);
   updProg();
@@ -974,7 +974,7 @@ window.clearAllSaved = function() {
 var abEditId   = null;
 var abCurType  = 'primary';
 var AB_COLORS  = {primary:'av-pri', secondary:'av-sec', other:'av-oth'};
-var AB_LABELS  = {primary:'Primaire', secondary:'Secondaire', other:'Autre'};
+function abLabel(t){ return t==='primary'?T('ab_primary'):t==='secondary'?T('ab_secondary'):T('ab_other'); }
 
 function getAbs() { try{return JSON.parse(localStorage.getItem('buf_abs')||'[]');}catch(e){return[];} }
 function setAbs(a) { localStorage.setItem('buf_abs', JSON.stringify(a)); }
@@ -1001,7 +1001,7 @@ function renderAb() {
   list.innerHTML = '';
   abs.forEach(function(ab) {
     var avc  = AB_COLORS[ab.type] || 'av-pri';
-    var lbl  = AB_LABELS[ab.type] || 'Primaire';
+    var lbl  = abLabel(ab.type);
     var chips = [ab.hote, ab.app, ab.ref].filter(Boolean).map(function(c){ return '<span class="chip">'+c+'</span>'; }).join('');
     var dilWB = ab.dilWB ? '<span class="chip chip-b">WB '+ab.dilWB+'</span>' : '';
     var dilIF = ab.dilIF ? '<span class="chip" style="background:rgba(175,82,222,0.1);color:var(--purple)">IF '+ab.dilIF+'</span>' : '';
@@ -1296,7 +1296,7 @@ function buildPDFHtml(rec) {
       '<tbody>'+rows+'</tbody>'+
     '</table>'+
     '<div style="background:#efffef;border:1px solid rgba(52,199,89,0.3);border-radius:12px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">'+
-      '<div><div style="font-size:15px;font-weight:600;color:#1a7a35">Completer \u00e0 l&#39;eau (QSP)</div><div style="font-size:12px;color:#4a9a5a;margin-top:2px">Ajouter en dernier</div></div>'+
+      '<div><div style="font-size:15px;font-weight:600;color:#1a7a35">'+T('qsp_lbl')+' (QSP)</div><div style="font-size:12px;color:#4a9a5a;margin-top:2px">'+T('pdf_add_last')+'</div></div>'+
       '<div style="font-size:18px;font-weight:700;color:#1a7a35">'+rec.vol+' mL</div>'+
     '</div>'+
     '<div style="text-align:center;font-size:11px;color:#aaa">Buffer Calculator &bull; '+date+'</div>'+
@@ -1374,6 +1374,19 @@ var I18N = {
     cv_rpm_to_rcf:'RPM \u2192 RCF', cv_rcf_to_rpm:'RCF \u2192 RPM', cv_radius_lbl:'Rayon',
     cv_temp_ttl:'Temperature', cv_temp_sub:'\u00b0C \u2194 \u00b0F \u2194 K',
     cv_fill_fields:'Remplissez les champs',
+
+    // ab modal
+    type_pct:'Stock %', ab_primary:'Primaire', ab_secondary:'Secondaire', ab_other:'Autre',
+    ab_lbl_name:'Nom / Cible *', ab_lbl_ref:'Reference / Clone',
+    ab_lbl_supplier:'Fournisseur', ab_lbl_host:'Hote', ab_lbl_app:'Application',
+    ab_lbl_dil_wb:'Dilution (WB)', ab_lbl_dil_if:'Dilution (IF)',
+    ab_lbl_stock:'Stock restant (uL)', ab_lbl_notes:'Notes (conditions, blocage...)',
+    ab_ph_nom:'ex. Anti-GAPDH, Anti-rabbit HRP...', ab_ph_notes:'ex. 1h RT, 5% lait TBST, overnight 4C...',
+    mo_save_ph:'ex. PBS 10x, Lysis buffer pH 7.4...',
+    // ingredient builder
+    ing_name_ph:'ex. NaCl, Anti-rabbit HRP...',
+    // pdf
+    pdf_add_last:'Ajouter en dernier',
     share_hint:"Scannez le QR code ou copiez le lien.\nLa recette s'ouvrira directement dans l'app.",
     share_modal_title:'\ud83d\udd17 Partager la recette',
   },
@@ -1422,6 +1435,19 @@ var I18N = {
     cv_rpm_to_rcf:'RPM \u2192 RCF', cv_rcf_to_rpm:'RCF \u2192 RPM', cv_radius_lbl:'Radius',
     cv_temp_ttl:'Temperature', cv_temp_sub:'\u00b0C \u2194 \u00b0F \u2194 K',
     cv_fill_fields:'Fill in the fields',
+
+    // ab modal
+    type_pct:'Stock %', ab_primary:'Primary', ab_secondary:'Secondary', ab_other:'Other',
+    ab_lbl_name:'Name / Target *', ab_lbl_ref:'Reference / Clone',
+    ab_lbl_supplier:'Supplier', ab_lbl_host:'Host', ab_lbl_app:'Application',
+    ab_lbl_dil_wb:'Dilution (WB)', ab_lbl_dil_if:'Dilution (IF)',
+    ab_lbl_stock:'Remaining stock (uL)', ab_lbl_notes:'Notes (conditions, blocking...)',
+    ab_ph_nom:'e.g. Anti-GAPDH, Anti-rabbit HRP...', ab_ph_notes:'e.g. 1h RT, 5% milk TBST, overnight 4C...',
+    mo_save_ph:'e.g. PBS 10x, Lysis buffer pH 7.4...',
+    // ingredient builder
+    ing_name_ph:'e.g. NaCl, Anti-rabbit HRP...',
+    // pdf
+    pdf_add_last:'Add last',
     share_hint:"Scan the QR code or copy the link.\nThe recipe will open directly in the app.",
     share_modal_title:'\ud83d\udd17 Share recipe',
   }
@@ -1449,9 +1475,15 @@ function applyI18n() {
   if (btn) btn.textContent = LANG === 'fr' ? 'EN' : 'FR';
   // update html lang attr
   document.documentElement.lang = LANG;
-  // update placeholder on sol_name (no data-i18n on input, handle directly)
+  // update placeholders
   var sn = document.getElementById('sol_name');
   if (sn) sn.placeholder = LANG === 'fr' ? 'ex. PBS 1x, Lysis buffer...' : 'e.g. PBS 1x, Lysis buffer...';
+  var mn = document.getElementById('mo-save-nom');
+  if (mn) mn.placeholder = T('mo_save_ph');
+  var an = document.getElementById('abf-nom');
+  if (an) an.placeholder = T('ab_ph_nom');
+  var ano = document.getElementById('abf-notes');
+  if (ano) ano.placeholder = T('ab_ph_notes');
   // update static nav-step if no reagents
   var ns = document.getElementById('nav-step');
   if (ns && (ns.textContent === '0 reactif' || ns.textContent === '0 reagent'))
