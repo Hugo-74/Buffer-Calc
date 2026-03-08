@@ -662,14 +662,14 @@ window.applyScale = function() {
 
 // ─── UNIT OPTIONS ────────────────────────────────────────────────────
 function unitOpts(sel) {
-  return ['M','mM','uM','nM','mg/mL','ug/mL'].map(function(u){
+  return ['M','mM','uM','nM','g/mL','mg/mL','ug/mL'].map(function(u){
     var lbl = u==='ug/mL' ? 'µg/mL' : u==='uM' ? 'µM' : u;
     return '<option value="'+u+'"'+(u===sel?' selected':'')+'>'+lbl+'</option>';
   }).join('');
 }
 
 // returns true if unit is mass/volume (needs MW to convert)
-function isMassUnit(u) { return u==='mg/mL' || u==='ug/mL'; }
+function isMassUnit(u) { return u==='g/mL' || u==='mg/mL' || u==='ug/mL'; }
 function needsMw(u1, u2) {
   // MW only needed when mixing molar and mass units
   return isMassUnit(u1) !== isMassUnit(u2);
@@ -679,6 +679,7 @@ function needsMw(u1, u2) {
 function toMM_ext(val, unit, mw) {
   // For same-type units (both mass or both molar), we work in native units — just use raw value
   // MW only needed for cross-type conversion
+  if (unit==='g/mL')  { return mw ? (val*1000/mw) : val*1000; } // g/mL -> mg/mL *1000
   if (unit==='mg/mL') { return mw ? (val/mw) : val; }    // if MW: convert to mM; else keep as mg/mL ratio
   if (unit==='ug/mL') { return mw ? (val/mw/1000) : val/1000; } // ug/mL treated as mg/mL/1000
   return toMM(val, unit);
@@ -686,6 +687,7 @@ function toMM_ext(val, unit, mw) {
 
 // format concentration including mass units
 function fmtConcFull(mM, unit, mw) {
+  if (unit==='g/mL')  return mw ? (mM*mw/1000).toFixed(4)+' g/mL' : (mM/1000).toFixed(4)+' g/mL';
   if (unit==='mg/mL') return mw ? (mM*mw).toFixed(3)+' mg/mL' : mM.toFixed(3)+' mg/mL';
   if (unit==='ug/mL') return mw ? (mM*mw*1000).toFixed(3)+' µg/mL' : (mM*1000).toFixed(3)+' µg/mL';
   return fmtConc(mM);
@@ -727,8 +729,8 @@ function addIng(data) {
       '</div>'+
     '</div>'+
     '<div class="if '+(tp==='poudre'?'show':'')+'" id="fp-'+id+'">'+
-      '<div class="row"><div class="ri" style="background:#f2f2f7">&#9878;&#65039;</div>'+T('lbl_mw')+'  <div class="rr"><input type="number" id="mw-'+id+'" placeholder="58.44" min="0" step="any" style="width:80px" value="'+(data&&data.type==='poudre'?data.p1:'')+'"><span class="unit">g/mol</span></div></div>'+
-      '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div>'+T('lbl_final_conc')+'  <div class="rr"><input type="number" id="cp-'+id+'" placeholder="150" min="0" step="any" style="width:70px" value="'+(data&&data.type==='poudre'?data.p2:'')+'"><select class="usel" id="up-'+id+'">'+unitOpts(data&&data.type==='poudre'?data.u2:'mM')+'</select></div></div>'+
+      '<div class="row" id="mw-row-p-'+id+'" style="display:'+(data&&data.type==='poudre'&&isMassUnit(data.u2)?'none':'flex')+'"><div class="ri" style="background:#f2f2f7">&#9878;&#65039;</div><span class="rl">'+T('lbl_mw')+'</span><div class="rr"><input type="number" id="mw-'+id+'" placeholder="58.44" min="0" step="any" style="width:80px" value="'+(data&&data.type==='poudre'?data.p1:'')+'"><span class="unit">g/mol</span></div></div>'+
+      '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div><span class="rl">'+T('lbl_final_conc')+'</span><div class="rr"><input type="number" id="cp-'+id+'" placeholder="150" min="0" step="any" style="width:70px" value="'+(data&&data.type==='poudre'?data.p2:'')+'"><select class="usel" id="up-'+id+'" onchange="showMwRowP('+id+')">'+unitOpts(data&&data.type==='poudre'?data.u2:'mM')+'</select></div></div>'+
     '</div>'+
     '<div class="if '+(tp==='molaire'?'show':'')+'" id="fm-'+id+'">'+
       '<div class="row" id="mw-row-'+id+'" style="display:'+((data&&data.u1&&data.u2&&needsMw(data.u1,data.u2))?'flex':'none')+'"><div class="ri" style="background:#f2f2f7">&#9878;&#65039;</div><span class="rl">'+T('lbl_mw')+'</span><div class="rr"><input type="number" id="mwm-'+id+'" placeholder="66400" min="0" step="any" style="width:80px" value="'+(data&&data.mwm?data.mwm:'')+'"><span class="unit">g/mol</span></div></div>'+
@@ -783,6 +785,12 @@ window.syncU = function(id) {
   document.getElementById('uc-'+id).value = v;
 };
 
+window.showMwRowP = function(id) {
+  var uu = document.getElementById('up-'+id); if(!uu) return;
+  var row = document.getElementById('mw-row-p-'+id);
+  if (row) row.style.display = isMassUnit(uu.value) ? 'none' : 'flex';
+};
+
 window.showMwRow = function(id) {
   var us = document.getElementById('us-'+id); if(!us) return;
   var uc = document.getElementById('uc-'+id); if(!uc) return;
@@ -820,10 +828,19 @@ function calculer() {
       var mw   = parseFloat(document.getElementById('mw-'+id).value);
       var conc = parseFloat(document.getElementById('cp-'+id).value);
       var uu   = document.getElementById('up-'+id).value;
-      if (!mw || !conc) { err=true; return; }
-      var cmm = toMM(conc, uu);
-      qty = ((cmm/1000)*(vol/1000)*mw).toFixed(4)+' g';
-      det = fmtConc(cmm)+' - MW '+mw+' g/mol';
+      if (!conc) { err=true; return; }
+      if (isMassUnit(uu)) {
+        // mass unit: masse = conc (mg/mL) × vol (mL), no MW needed
+        var concMg = uu==='g/mL' ? conc*1000 : uu==='ug/mL' ? conc/1000 : conc; // normalize to mg/mL
+        var masseMg = concMg * vol;
+        qty = masseMg >= 1000 ? (masseMg/1000).toFixed(4)+' g' : masseMg.toFixed(4)+' mg';
+        det = conc+(uu==='g/mL'?' g/mL':uu==='ug/mL'?' µg/mL':' mg/mL')+' - '+T('direct_mass');
+      } else {
+        if (!mw) { err=true; return; }
+        var cmm = toMM(conc, uu);
+        qty = ((cmm/1000)*(vol/1000)*mw).toFixed(4)+' g';
+        det = fmtConc(cmm)+' - MW '+mw+' g/mol';
+      }
 
     } else if (tp === 'molaire') {
       var sk  = parseFloat(document.getElementById('sm-'+id).value);
