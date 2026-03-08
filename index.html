@@ -662,9 +662,33 @@ window.applyScale = function() {
 
 // ─── UNIT OPTIONS ────────────────────────────────────────────────────
 function unitOpts(sel) {
-  return ['M','mM','uM','nM'].map(function(u){
-    return '<option value="'+u+'"'+(u===sel?' selected':'')+'>'+u+'</option>';
+  return ['M','mM','uM','nM','mg/mL','ug/mL'].map(function(u){
+    var lbl = u==='ug/mL' ? 'µg/mL' : u==='uM' ? 'µM' : u;
+    return '<option value="'+u+'"'+(u===sel?' selected':'')+'>'+lbl+'</option>';
   }).join('');
+}
+
+// returns true if unit is mass/volume (needs MW to convert)
+function isMassUnit(u) { return u==='mg/mL' || u==='ug/mL'; }
+function needsMw(u1, u2) {
+  // MW only needed when mixing molar and mass units
+  return isMassUnit(u1) !== isMassUnit(u2);
+}
+
+// convert to mM; for mass units pass mw (g/mol)
+function toMM_ext(val, unit, mw) {
+  // For same-type units (both mass or both molar), we work in native units — just use raw value
+  // MW only needed for cross-type conversion
+  if (unit==='mg/mL') { return mw ? (val/mw) : val; }    // if MW: convert to mM; else keep as mg/mL ratio
+  if (unit==='ug/mL') { return mw ? (val/mw/1000) : val/1000; } // ug/mL treated as mg/mL/1000
+  return toMM(val, unit);
+}
+
+// format concentration including mass units
+function fmtConcFull(mM, unit, mw) {
+  if (unit==='mg/mL') return mw ? (mM*mw).toFixed(3)+' mg/mL' : mM.toFixed(3)+' mg/mL';
+  if (unit==='ug/mL') return mw ? (mM*mw*1000).toFixed(3)+' µg/mL' : (mM*1000).toFixed(3)+' µg/mL';
+  return fmtConc(mM);
 }
 
 // ─── ADD INGREDIENT ──────────────────────────────────────────────────
@@ -687,7 +711,7 @@ function addIng(data) {
         '<div class="ib-num">'+id+'</div>'+
         '<div class="ib-ttl" id="ib-ttl-'+id+'">'+(data&&data.nom?data.nom:T('new_reagent'))+'</div>'+
       '</div>'+
-      '<button class="btn-rm" onclick="rmIng('+id+')">Retirer</button>'+
+      '<button class="btn-rm" onclick="rmIng('+id+')">'+T('btn_remove')+'</button>'+
     '</div>'+
     '<div class="row">'+
       '<div class="ri '+cc+'">'+ico+'</div>'+
@@ -707,8 +731,9 @@ function addIng(data) {
       '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div>'+T('lbl_final_conc')+'  <div class="rr"><input type="number" id="cp-'+id+'" placeholder="150" min="0" step="any" style="width:70px" value="'+(data&&data.type==='poudre'?data.p2:'')+'"><select class="usel" id="up-'+id+'">'+unitOpts(data&&data.type==='poudre'?data.u2:'mM')+'</select></div></div>'+
     '</div>'+
     '<div class="if '+(tp==='molaire'?'show':'')+'" id="fm-'+id+'">'+
-      '<div class="row"><div class="ri" style="background:#f2f2f7">&#128230;</div>'+T('lbl_stock')+'  <div class="rr"><input type="number" id="sm-'+id+'" placeholder="1000" min="0" step="any" style="width:70px" value="'+(data&&data.type==='molaire'?data.p1:'')+'"><select class="usel" id="us-'+id+'" onchange="syncU('+id+')">'+unitOpts(data&&data.type==='molaire'?data.u1:'mM')+'</select></div></div>'+
-      '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div>'+T('lbl_target')+'  <div class="rr"><input type="number" id="cm-'+id+'" placeholder="10" min="0" step="any" style="width:70px" value="'+(data&&data.type==='molaire'?data.p2:'')+'"><select class="usel" id="uc-'+id+'">'+unitOpts(data&&data.type==='molaire'?data.u2:'mM')+'</select></div></div>'+
+      '<div class="row" id="mw-row-'+id+'" style="display:'+((data&&data.u1&&data.u2&&needsMw(data.u1,data.u2))?'flex':'none')+'"><div class="ri" style="background:#f2f2f7">&#9878;&#65039;</div><span class="rl">'+T('lbl_mw')+'</span><div class="rr"><input type="number" id="mwm-'+id+'" placeholder="66400" min="0" step="any" style="width:80px" value="'+(data&&data.mwm?data.mwm:'')+'"><span class="unit">g/mol</span></div></div>'+
+      '<div class="row"><div class="ri" style="background:#f2f2f7">&#128230;</div><span class="rl">'+T('lbl_stock')+'</span><div class="rr"><input type="number" id="sm-'+id+'" placeholder="1000" min="0" step="any" style="width:70px" value="'+(data&&data.type==='molaire'?data.p1:'')+'"><select class="usel" id="us-'+id+'" onchange="syncU('+id+');showMwRow('+id+')">'+unitOpts(data&&data.type==='molaire'?data.u1:'mM')+'</select></div></div>'+
+      '<div class="row"><div class="ri" style="background:#f2f2f7">&#127919;</div><span class="rl">'+T('lbl_target')+'</span><div class="rr"><input type="number" id="cm-'+id+'" placeholder="10" min="0" step="any" style="width:70px" value="'+(data&&data.type==='molaire'?data.p2:'')+'"><select class="usel" id="uc-'+id+'" onchange="showMwRow('+id+')">'+unitOpts(data&&data.type==='molaire'?data.u2:'mM')+'</select></div></div>'+
     '</div>'+
     '<div class="if '+(tp==='pct'?'show':'')+'" id="ft-'+id+'">'+
       '<div class="row"><div class="ri" style="background:#f2f2f7">&#128230;</div>'+T('lbl_stock')+'  <div class="rr"><input type="number" id="sp-'+id+'" placeholder="100" min="0" step="any" style="width:80px" value="'+(data&&data.type==='pct'?data.p1:'')+'"><span class="unit">%</span></div></div>'+
@@ -758,6 +783,14 @@ window.syncU = function(id) {
   document.getElementById('uc-'+id).value = v;
 };
 
+window.showMwRow = function(id) {
+  var us = document.getElementById('us-'+id); if(!us) return;
+  var uc = document.getElementById('uc-'+id); if(!uc) return;
+  var need = needsMw(us.value, uc.value);
+  var row = document.getElementById('mw-row-'+id);
+  if (row) row.style.display = need ? 'flex' : 'none';
+};
+
 function getItp(id) {
   for (var t of ['poudre','molaire','pct'])
     if (document.getElementById('bt-'+t+'-'+id).classList.contains('active')) return t;
@@ -778,7 +811,7 @@ function calculer() {
 
   cards.forEach(function(card) {
     var id   = card.id.replace('ing-','');
-    var name = (document.getElementById('n-'+id).value || 'Reactif '+id).trim();
+    var name = (document.getElementById('n-'+id).value || T('reagent')+' '+id).trim();
     var tp   = getItp(id);
     var qty  = '', det = '';
     tc[tp]++;
@@ -797,11 +830,15 @@ function calculer() {
       var ci  = parseFloat(document.getElementById('cm-'+id).value);
       var us  = document.getElementById('us-'+id).value;
       var uc  = document.getElementById('uc-'+id).value;
+      var mwmEl = document.getElementById('mwm-'+id);
+      var mwm = mwmEl ? parseFloat(mwmEl.value) : NaN;
       if (!sk || !ci) { err=true; return; }
-      var smm = toMM(sk, us), cmm2 = toMM(ci, uc);
-      if (cmm2 >= smm) { toast(name+': cible >= stock !'); err=true; return; }
+      if (needsMw(us,uc) && !mwm) { toast(name+': '+T('err_mw_needed')); err=true; return; }
+      var smm = toMM_ext(sk, us, mwm), cmm2 = toMM_ext(ci, uc, mwm);
+      if (!smm || !cmm2) { err=true; return; }
+      if (cmm2 >= smm) { toast(name+': '+T('err_target_gte_stock')); err=true; return; }
       qty = fmtVol((cmm2*vol)/smm);
-      det = fmtConc(smm)+' -> '+fmtConc(cmm2);
+      det = fmtConcFull(smm,us,mwm)+' → '+fmtConcFull(cmm2,uc,mwm);
 
     } else {
       var sp = parseFloat(document.getElementById('sp-'+id).value);
@@ -817,10 +854,10 @@ function calculer() {
 
   var tct = Object.values(tc).filter(function(v){return v>0;}).length;
   document.getElementById('res-name').textContent = nom;
-  document.getElementById('res-badge').textContent = recette.length+' reactif'+(recette.length>1?'s':'');
+  document.getElementById('res-badge').textContent = recette.length+' '+T('reagent')+(recette.length>1?'s':'');
   document.getElementById('stat-vol').textContent  = vol>=1000?(vol/1000).toFixed(1)+'L':vol+'mL';
   document.getElementById('stat-cnt').textContent  = recette.length;
-  document.getElementById('stat-typ').textContent  = tct+(tct>1?' types':' type');
+  document.getElementById('stat-typ').textContent  = tct+' '+(tct>1?T('types'):T('type'));
   document.getElementById('qsp-val').textContent   = 'QSP '+vol+' mL';
 
   var grp = document.getElementById('res-group');
@@ -853,7 +890,7 @@ function collectIngs() {
     var tp = getItp(id);
     var e  = {nom:document.getElementById('n-'+id).value, type:tp};
     if (tp==='poudre')  { e.p1=document.getElementById('mw-'+id).value; e.p2=document.getElementById('cp-'+id).value; e.u2=document.getElementById('up-'+id).value; }
-    if (tp==='molaire') { e.p1=document.getElementById('sm-'+id).value; e.p2=document.getElementById('cm-'+id).value; e.u1=document.getElementById('us-'+id).value; e.u2=document.getElementById('uc-'+id).value; }
+    if (tp==='molaire') { e.p1=document.getElementById('sm-'+id).value; e.p2=document.getElementById('cm-'+id).value; e.u1=document.getElementById('us-'+id).value; e.u2=document.getElementById('uc-'+id).value; var mwmEl=document.getElementById('mwm-'+id); e.mwm=mwmEl?mwmEl.value:''; }
     if (tp==='pct')     { e.p1=document.getElementById('sp-'+id).value; e.p2=document.getElementById('xp-'+id).value; }
     data.push(e);
   });
@@ -866,7 +903,7 @@ window.copyRecette = function() {
   var nom = document.getElementById('sol_name').value || 'Solution';
   var t = nom+' -- '+vol+' mL\n'+'--'.repeat(20)+'\n';
   recette.forEach(function(i){ t += (i.nom+':').padEnd(24)+i.qty.padEnd(14)+i.det+'\n'; });
-  t += '--'.repeat(20)+'\nCompleter a l&#39;eau QSP '+vol+' mL';
+  t += '--'.repeat(20)+'\n'+T('qsp_lbl')+' QSP '+vol+' mL';
   navigator.clipboard.writeText(t).then(function(){
     var b = document.getElementById('copy-btn');
     b.classList.add('ok'); b.textContent = T('copied');
@@ -901,7 +938,7 @@ function updSavedBadge() {
 }
 
 window.openSaveModal = function() {
-  if (!curRec) { toast('Calculez d\'abord une recette'); return; }
+  if (!curRec) { toast(T('err_calc_first_recipe')); return; }
   document.getElementById('mo-save-nom').value = curRec.nom;
   document.getElementById('mo-save').classList.add('show');
   setTimeout(function(){ document.getElementById('mo-save-nom').focus(); }, 350);
@@ -913,10 +950,10 @@ window.saveRecette = function() {
   if (!nom) { document.getElementById('mo-save-nom').focus(); return; }
   var saved = getSaved();
   saved.unshift({id:Date.now(), nom:nom, vol:curRec.vol,
-    date:new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}),
+    date:new Date().toLocaleDateString(LANG==='en'?'en-GB':'fr-FR',{day:'2-digit',month:'short',year:'numeric'}),
     ings:curRec.ings, res:curRec.res});
   setSaved(saved); closeSaveModal(); updSavedBadge();
-  toast('"'+nom+'" sauvegardee');
+  toast('"'+nom+'" '+T('toast_saved'));
 };
 
 function renderSaved() {
@@ -934,7 +971,7 @@ function renderSaved() {
       '<div class="rc-hdr" onclick="togglePrev('+r.id+')">'+
         '<div class="rc-l"><div class="rc-name">'+r.nom+'</div><div class="rc-meta">'+r.vol+' mL &middot; '+(r.res||[]).length+' '+T('reagent')+((r.res||[]).length>1?'s':'')+' &middot; '+r.date+'</div></div>'+
         '<div class="rc-r">'+
-          '<button class="rc-load" onclick="event.stopPropagation();loadRec('+r.id+')">Charger</button>'+
+          '<button class="rc-load" onclick="event.stopPropagation();loadRec('+r.id+')">'+T('btn_load')+'</button>'+
           '<button class="rc-load" style="background:rgba(0,122,255,0.08);color:var(--blue)" onclick="event.stopPropagation();shareRec('+r.id+')">&#128279;</button>'+
           '<button class="rc-load" style="background:rgba(255,59,48,0.1);color:var(--red)" onclick="event.stopPropagation();pdfRec('+r.id+')">&#128196;</button>'+
           '<button class="rc-del" onclick="event.stopPropagation();delRec('+r.id+')">&#x2715;</button>'+
@@ -957,7 +994,7 @@ window.loadRec = function(id) {
   ctr=0; recette=[];
   (r.ings||[]).forEach(function(d){ addIng(d); });
   updProg(); switchTab('calc');
-  toast('"'+r.nom+'" chargee');
+  toast('"'+r.nom+'" '+T('loaded'));
 };
 
 window.delRec = function(id) {
@@ -1051,8 +1088,8 @@ function renderAb() {
             '<span class="ap-u">mL</span>'+
           '</div>'+
           '<div class="ab-result" id="ab-res-'+ab.id+'">'+
-            '<div class="ab-rl"><span class="ab-rk">Volume anticorps a prelever</span><span class="ab-rv" id="ab-rv-vol-'+ab.id+'">--</span></div>'+
-            '<div class="ab-rl"><span class="ab-rk">Volume diluant a ajouter</span><span class="ab-rv" id="ab-rv-dil-'+ab.id+'">--</span></div>'+
+            '<div class="ab-rl"><span class="ab-rk">'+T('ab_vol_antibody')+'</span><span class="ab-rv" id="ab-rv-vol-'+ab.id+'">--</span></div>'+
+            '<div class="ab-rl"><span class="ab-rk">'+T('ab_vol_diluent')+'</span><span class="ab-rv" id="ab-rv-dil-'+ab.id+'">--</span></div>'+
             (stk ? '<div class="ab-rl"><span class="ab-rk">% du stock consomme</span><span class="ab-rv" id="ab-rv-pct-'+ab.id+'">--</span></div>' : '')+
           '</div>'+
           (stk ? '<button class="btn-save" style="width:100%;margin-top:10px;border-radius:10px" onclick="useAb('+ab.id+')">&#10003; Marquer comme utilise</button>' : '')+
@@ -1110,7 +1147,7 @@ window.useAb = function(id) {
   var dilStr = document.getElementById('ab-dil-'+id).value.trim();
   var vol    = parseFloat(document.getElementById('ab-vol-'+id).value);
   var denom  = parseDil(dilStr);
-  if (!denom || !vol) { toast('Calculez d\'abord une dilution'); return; }
+  if (!denom || !vol) { toast(T('err_calc_first')); return; }
   var volAbUL = (vol/denom)*1000;
   var abs = getAbs(), ab = abs.find(function(x){return x.id===id;});
   if (!ab) return;
@@ -1185,7 +1222,7 @@ window.saveAb = function() {
     abs.unshift(entry);
   }
   setAbs(abs); closeAbModal(); updAbBadge(); renderAb();
-  toast((abEditId?'Modifie: ':'')+'"'+nom+'"'+(abEditId?'':' ajoute'));
+  toast((abEditId?T('modified'):T('added'))+' "'+nom+'"');
 };
 
 
@@ -1268,7 +1305,8 @@ function checkUrlRecipe() {
 
 // ─── PDF ──────────────────────────────────────────────────────────────
 function buildPDFHtml(rec) {
-  var date = new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+  var locale = LANG==='en'?'en-GB':'fr-FR';
+  var date = new Date().toLocaleDateString(locale,{day:'2-digit',month:'long',year:'numeric'});
   var rows = (rec.res||[]).map(function(item,i){
     var bg = i%2===0 ? '#f8f9fb' : '#ffffff';
     return '<tr style="background:'+bg+'">'+
@@ -1282,9 +1320,9 @@ function buildPDFHtml(rec) {
       '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:6px">'+T('pdf_prep_sheet')+'</div>'+
       '<div style="font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:16px">'+rec.nom+'</div>'+
       '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'+
-        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+rec.vol+' mL</div><div style="font-size:11px;opacity:0.7;margin-top:2px">Volume final</div></div>'+
-        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+(rec.res||[]).length+'</div><div style="font-size:11px;opacity:0.7;margin-top:2px">Reactifs</div></div>'+
-        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+date+'</div><div style="font-size:11px;opacity:0.7;margin-top:2px">Date</div></div>'+
+        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+rec.vol+' mL</div><div style="font-size:11px;opacity:0.7;margin-top:2px">'+T('stat_vol')+'</div></div>'+
+        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+(rec.res||[]).length+'</div><div style="font-size:11px;opacity:0.7;margin-top:2px">'+T('stat_reagents')+'</div></div>'+
+        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+date+'</div><div style="font-size:11px;opacity:0.7;margin-top:2px">'+T('pdf_date')+'</div></div>'+
       '</div>'+
     '</div>'+
     '<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:16px">'+
@@ -1361,7 +1399,7 @@ var I18N = {
     toast_all_cleared:'Tout efface', toast_ab_deleted:'Anticorps supprime',
     toast_stock_updated:'Stock mis a jour', toast_link_copied:'Lien copie !',
     toast_shared_loaded:'Recette partagee chargee !', remaining:'restants',
-    modified:'Modifie :', added:'Ajoute :', copied:'Copie !', btn_copy_txt:'Copier',
+    modified:'Modifie', added:'Ajoute', copied:'Copie !', btn_copy_txt:'Copier', toast_saved:'sauvegardee', loaded:'chargee', types:'types', type:'type', err_mw_needed:'MW requis pour cette unite', err_target_gte_stock:'cible >= stock !', ab_vol_diluent:'Volume diluant a ajouter',
     pdf_prep_sheet:'Fiche de preparation', pdf_date:'Date',
     pdf_reagent:'Reactif', pdf_qty:'Quantite', pdf_details:'Details',
     // conversions
@@ -1422,7 +1460,7 @@ var I18N = {
     toast_all_cleared:'All cleared', toast_ab_deleted:'Antibody deleted',
     toast_stock_updated:'Stock updated', toast_link_copied:'Link copied!',
     toast_shared_loaded:'Shared recipe loaded!', remaining:'remaining',
-    modified:'Edited:', added:'Added:', copied:'Copied!', btn_copy_txt:'Copy',
+    modified:'Edited', added:'Added', copied:'Copied!', btn_copy_txt:'Copy', toast_saved:'saved', loaded:'loaded', types:'types', type:'type', err_mw_needed:'MW required for this unit', err_target_gte_stock:'target >= stock!', ab_vol_diluent:'Diluent volume to add',
     pdf_prep_sheet:'Preparation sheet', pdf_date:'Date',
     pdf_reagent:'Reagent', pdf_qty:'Quantity', pdf_details:'Details',
     // conversions
