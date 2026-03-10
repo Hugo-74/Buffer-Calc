@@ -328,6 +328,15 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 [data-theme="dark"] .group { background:#2c2c2e; }
 [data-theme="dark"] .ab-field input, [data-theme="dark"] .ab-field select { background:#3a3a3c; color:#fff; }
 
+
+/* LOT TRACKING */
+.lot-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:6px; display:inline-block; }
+.lot-ok   { background:var(--green-l); color:#1a7a35; }
+.lot-warn { background:rgba(255,149,0,0.12); color:#c45e00; }
+.lot-exp  { background:var(--red-l); color:var(--red); }
+.lot-search { width:100%; background:var(--surface); border:0.5px solid var(--sep-o); border-radius:12px; padding:10px 14px; font-family:inherit; font-size:15px; color:var(--l); outline:none; margin-bottom:14px; }
+[data-theme="dark"] .lot-search { background:#2c2c2e; color:#fff; }
+
 @keyframes sli { from{opacity:0;transform:translateY(10px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
 </style>
 <!-- Firebase SDK -->
@@ -379,6 +388,7 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
     <button class="tab-btn" id="tab-saved" onclick="switchTab('saved')"><span class="ti">&#128190;</span><span data-i18n="tab_saved">Recettes</span> <span id="saved-badge" style="display:none;background:var(--red);color:#fff;border-radius:10px;font-size:10px;padding:1px 5px;margin-left:2px"></span></button>
     <button class="tab-btn" id="tab-ab" onclick="switchTab('ab')"><span class="ti">&#128300;</span><span data-i18n="tab_ab">Anticorps</span> <span id="ab-badge" style="display:none;background:var(--purple);color:#fff;border-radius:10px;font-size:10px;padding:1px 5px;margin-left:2px"></span></button>
     <button class="tab-btn" id="tab-dil" onclick="switchTab('dil')"><span class="ti">🧪</span><span data-i18n="tab_dil">Dilutions</span></button>
+    <button class="tab-btn" id="tab-lots" onclick="switchTab('lots')"><span class="ti">📦</span><span data-i18n="tab_lots">Lots</span></button>
     <button class="tab-btn" id="tab-conv" onclick="switchTab('conv')"><span class="ti">&#9881;&#65039;</span><span data-i18n="tab_conv">Conversions</span></button>
   </div>
 </div>
@@ -568,6 +578,18 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 </div>
 
 <!-- PAGE CONVERSIONS -->
+<!-- PAGE LOTS -->
+<div class="page" id="page-lots">
+<div class="sc">
+  <div class="sh" style="margin-bottom:12px">
+    <span class="sl" data-i18n="lots_title">Suivi de lots</span>
+    <button class="btn-act" style="padding:7px 14px;font-size:13px;background:var(--orange);color:#fff;border-radius:10px;box-shadow:none" onclick="openLotModal(null)">+ <span data-i18n="lots_add">Ajouter</span></button>
+  </div>
+  <input class="lot-search" id="lots-search" placeholder="Rechercher..." oninput="renderLots()" data-i18n-ph="lots_search">
+  <div id="lots-list"></div>
+</div>
+</div>
+
 <div class="page" id="page-conv">
 <div class="sc">
 
@@ -739,6 +761,34 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
       </div>
       <button class="mo-btn mo-ok" style="width:100%;background:var(--blue);margin-bottom:10px" onclick="syncNow()">☁️ <span data-i18n="auth_sync_now">Synchroniser maintenant</span></button>
       <button class="mo-btn mo-cancel" style="width:100%;color:var(--red)" onclick="doSignOut()">↩️ <span data-i18n="auth_signout">Se déconnecter</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LOT -->
+<div class="mo" id="mo-lot" onclick="if(event.target===this)closeLotModal()">
+  <div class="mo-box">
+    <div class="mo-handle"></div>
+    <div class="mo-title" id="mo-lot-title">Ajouter un réactif</div>
+    <input class="mo-inp" id="lot-nom" placeholder="ex. BSA, NaCl, Tris..." maxlength="60" style="margin-bottom:8px" data-i18n-ph="lots_ph_nom">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <input class="mo-inp" id="lot-num" placeholder="N° de lot" maxlength="40" style="margin-bottom:0;flex:1" data-i18n-ph="lots_ph_num">
+      <input class="mo-inp" id="lot-fournisseur" placeholder="Fournisseur" maxlength="40" style="margin-bottom:0;flex:1" data-i18n-ph="lots_ph_fournisseur">
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--l2);margin-bottom:4px" data-i18n="lots_exp_label">Date d'expiration</div>
+        <input class="mo-inp" id="lot-exp" type="date" style="margin-bottom:0">
+      </div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--l2);margin-bottom:4px" data-i18n="lots_qty_label">Quantité restante</div>
+        <input class="mo-inp" id="lot-qty" placeholder="ex. 500 mg" maxlength="20" style="margin-bottom:0" data-i18n-ph="lots_ph_qty">
+      </div>
+    </div>
+    <input class="mo-inp" id="lot-notes" placeholder="Notes..." maxlength="120" style="margin-bottom:14px" data-i18n-ph="lots_ph_notes">
+    <div class="mo-acts">
+      <button class="mo-btn mo-cancel" onclick="closeLotModal()" data-i18n="btn_cancel">Annuler</button>
+      <button class="mo-btn mo-ok" style="background:var(--orange)" onclick="saveLot()" data-i18n="btn_save">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -1131,6 +1181,7 @@ window.doSignOut = function() {
       // Clear local data so next user starts fresh
       localStorage.removeItem('buf_rec');
       localStorage.removeItem('buf_abs');
+      localStorage.removeItem('buf_lots');
       renderAuthNav();
       closeAuthModal();
       updSavedBadge(); updAbBadge();
@@ -1162,9 +1213,10 @@ function pushToCloud(cb) {
     var abs   = getAbs();
     var ref = fb.doc(fb.db, 'users', fbUser.uid);
     fb.setDoc(ref, {
-      recipes:   JSON.stringify(saved),
+      recipes:    JSON.stringify(saved),
       antibodies: JSON.stringify(abs),
-      updatedAt: Date.now()
+      lots:       JSON.stringify(getLots()),
+      updatedAt:  Date.now()
     }, { merge: true }).then(function(){ if(cb) cb(); });
   });
 }
@@ -1177,10 +1229,12 @@ function syncFromCloud() {
       // Always clear local first to avoid mixing accounts
       localStorage.removeItem('buf_rec');
       localStorage.removeItem('buf_abs');
+      localStorage.removeItem('buf_lots');
       if (snap.exists()) {
         var data = snap.data();
         if (data.recipes)    { try { localStorage.setItem('buf_rec', data.recipes); } catch(e){} }
         if (data.antibodies) { try { localStorage.setItem('buf_abs', data.antibodies); } catch(e){} }
+        if (data.lots)       { try { localStorage.setItem('buf_lots', data.lots); } catch(e){} }
         toast('☁️ ' + (T('auth_synced_on_login')||'Données synchronisées'));
       }
       updSavedBadge(); updAbBadge();
@@ -1223,13 +1277,14 @@ window.toggleDark = function() {
 
 // ─── TABS ─────────────────────────────────────────────────────────────
 window.switchTab = function(tab) {
-  ['calc','saved','ab','dil','conv'].forEach(function(t) {
+  ['calc','saved','ab','dil','lots','conv'].forEach(function(t) {
     document.getElementById('page-'+t).classList.toggle('active', t===tab);
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
   });
   if (tab === 'saved') renderSaved();
   if (tab === 'ab')    renderAb();
   if (tab === 'dil')   calcDil();
+  if (tab === 'lots')  renderLots();
 };
 
 // ─── PROGRESS ─────────────────────────────────────────────────────────
@@ -2006,6 +2061,11 @@ var I18N = {
     dil_stock_short:'Stock', dil_well:'Puits',
     dil_of_stock:'du stock', dil_of_prev:'du puits précédent',
     dil_steps_short:'étapes', err_popup:'Autorisez les popups pour imprimer',
+    tab_lots:'Lots', lots_title:'Suivi de lots', lots_add:'Ajouter un réactif',
+    lots_edit:'Modifier', lots_exp_label:"Date d'expiration", lots_qty_label:'Quantité restante',
+    lots_empty:'Aucun réactif suivi', lots_empty_hint:'Ajoutez vos réactifs pour suivre leur expiration',
+    lots_confirm_del:'Supprimer ce réactif ?',
+    lots_search:'Rechercher un réactif...', lots_ph_nom:'ex. BSA, NaCl, Tris...', lots_ph_num:'N° de lot', lots_ph_fournisseur:'Fournisseur', lots_ph_qty:'ex. 500 mg', lots_ph_notes:'Notes...',
     tab_calc:'Calculer', tab_saved:'Recettes', tab_ab:'Anticorps', tab_conv:'Conversions',
     sl_solution:'Solution', rl_name:'Nom', rl_volume:'Volume',
     sf_vol_hint:"Volume final vise, apres ajout de tous les reactifs et complement a l'eau.",
@@ -2091,6 +2151,11 @@ var I18N = {
     dil_stock_short:'Stock', dil_well:'Well',
     dil_of_stock:'from stock', dil_of_prev:'from prev. well',
     dil_steps_short:'steps', err_popup:'Allow popups to print',
+    tab_lots:'Lots', lots_title:'Lot tracking', lots_add:'Add reagent',
+    lots_edit:'Edit', lots_exp_label:'Expiry date', lots_qty_label:'Remaining qty',
+    lots_empty:'No reagents tracked', lots_empty_hint:'Add reagents to track their expiry',
+    lots_confirm_del:'Delete this reagent?',
+    lots_search:'Search a reagent...', lots_ph_nom:'e.g. BSA, NaCl, Tris...', lots_ph_num:'Lot / batch #', lots_ph_fournisseur:'Supplier', lots_ph_qty:'e.g. 500 mg', lots_ph_notes:'Notes...',
     tab_calc:'Calculate', tab_saved:'Recipes', tab_ab:'Antibodies', tab_conv:'Conversions',
     sl_solution:'Solution', rl_name:'Name', rl_volume:'Volume',
     sf_vol_hint:'Final target volume, after adding all reagents and water to volume.',
@@ -2169,6 +2234,11 @@ function applyI18n() {
       var tn = el.childNodes[0];
       if (tn && tn.nodeType === 3) tn.textContent = val + ' ';
     }
+  });
+  // update placeholders via data-i18n-ph
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+    var val = T(el.getAttribute('data-i18n-ph'));
+    if (val) el.placeholder = val;
   });
   // update lang button
   var btn = document.getElementById('lang-btn');
@@ -2354,6 +2424,166 @@ window.cvTempFrom = function(from) {
   if (from!=='k') document.getElementById('cv-tk').value = r4(k);
   cvTempUpdating = false;
 };
+
+
+// ─── LOT TRACKING ─────────────────────────────────────────────────────
+var lotEditId = null;
+
+function getLots() {
+  try { return JSON.parse(localStorage.getItem('buf_lots') || '[]'); } catch(e) { return []; }
+}
+function setLots(a) {
+  localStorage.setItem('buf_lots', JSON.stringify(a));
+  if (fbUser) pushToCloud();
+}
+
+function lotStatus(expStr) {
+  if (!expStr) return 'none';
+  var days = Math.ceil((new Date(expStr + 'T12:00:00') - new Date()) / 86400000);
+  if (days < 0)  return 'exp';
+  if (days < 30) return 'warn';
+  return 'ok';
+}
+
+function lotBadge(expStr) {
+  var s = lotStatus(expStr);
+  if (s === 'none') return '';
+  var days = Math.ceil((new Date(expStr + 'T12:00:00') - new Date()) / 86400000);
+  var txt  = s === 'ok' ? '✓ OK' : s === 'warn' ? '⚠ ' + days + 'j' : '✗ Expiré';
+  if (LANG === 'en') txt = s === 'ok' ? '✓ OK' : s === 'warn' ? '⚠ ' + days + 'd' : '✗ Expired';
+  return '<span class="lot-badge lot-' + s + '">' + txt + '</span>';
+}
+
+window.openLotModal = function(id) {
+  lotEditId = id ? String(id) : null;
+  ['nom','num','fournisseur','exp','qty','notes'].forEach(function(f) {
+    document.getElementById('lot-' + f).value = '';
+  });
+  if (lotEditId) {
+    var lot = getLots().find(function(x) { return String(x.id) === lotEditId; });
+    if (!lot) return;
+    document.getElementById('lot-nom').value         = lot.nom         || '';
+    document.getElementById('lot-num').value         = lot.num         || '';
+    document.getElementById('lot-fournisseur').value = lot.fournisseur || '';
+    document.getElementById('lot-exp').value         = lot.exp         || '';
+    document.getElementById('lot-qty').value         = lot.qty         || '';
+    document.getElementById('lot-notes').value       = lot.notes       || '';
+    document.getElementById('mo-lot-title').textContent = T('lots_edit') || 'Modifier';
+  } else {
+    document.getElementById('mo-lot-title').textContent = T('lots_add') || 'Ajouter un réactif';
+  }
+  document.getElementById('mo-lot').classList.add('show');
+  setTimeout(function() { document.getElementById('lot-nom').focus(); }, 300);
+};
+
+window.closeLotModal = function() {
+  document.getElementById('mo-lot').classList.remove('show');
+};
+
+window.saveLot = function() {
+  var nom = document.getElementById('lot-nom').value.trim();
+  if (!nom) { document.getElementById('lot-nom').focus(); return; }
+  var lots = getLots();
+  var now  = Date.now();
+  var entry = {
+    id:          lotEditId || String(now),
+    nom:         nom,
+    num:         document.getElementById('lot-num').value.trim(),
+    fournisseur: document.getElementById('lot-fournisseur').value.trim(),
+    exp:         document.getElementById('lot-exp').value,
+    qty:         document.getElementById('lot-qty').value.trim(),
+    notes:       document.getElementById('lot-notes').value.trim(),
+    addedAt:     lotEditId
+      ? ((lots.find(function(x) { return String(x.id) === lotEditId; }) || {}).addedAt || now)
+      : now
+  };
+  if (lotEditId) {
+    var idx = lots.findIndex(function(x) { return String(x.id) === lotEditId; });
+    if (idx >= 0) lots[idx] = entry; else lots.unshift(entry);
+  } else {
+    lots.unshift(entry);
+  }
+  setLots(lots);
+  closeLotModal();
+  renderLots();
+  toast(nom + ' ' + (T('toast_saved') || 'sauvegardé'));
+};
+
+window.delLot = function(id) {
+  if (!confirm(T('lots_confirm_del') || 'Supprimer ce réactif ?')) return;
+  setLots(getLots().filter(function(x) { return String(x.id) !== String(id); }));
+  renderLots();
+  toast(T('toast_recipe_deleted') || 'Supprimé');
+};
+
+function renderLots() {
+  var list = document.getElementById('lots-list');
+  if (!list) return;
+  var search = ((document.getElementById('lots-search') || {}).value || '').toLowerCase();
+  var lots = getLots().filter(function(l) {
+    return (l.nom || '').toLowerCase().includes(search);
+  });
+
+  if (!lots.length) {
+    list.innerHTML =
+      '<div class="empty">' +
+        '<div class="ei">📦</div>' +
+        '<div class="et">' + (T('lots_empty') || 'Aucun réactif suivi') + '</div>' +
+        '<div class="es">' + (T('lots_empty_hint') || 'Ajoutez vos réactifs pour suivre leur expiration') + '</div>' +
+      '</div>';
+    return;
+  }
+
+  // Trier : expirés → bientôt → ok → sans date
+  var order = { exp: 0, warn: 1, ok: 2, none: 3 };
+  lots.sort(function(a, b) {
+    return order[lotStatus(a.exp)] - order[lotStatus(b.exp)];
+  });
+
+  list.innerHTML = '';
+  lots.forEach(function(l) {
+    var sid = String(l.id);
+    var expFmt = l.exp
+      ? new Date(l.exp + 'T12:00:00').toLocaleDateString(
+          LANG === 'en' ? 'en-GB' : 'fr-FR',
+          { day: '2-digit', month: 'short', year: 'numeric' }
+        )
+      : '—';
+    var meta = [];
+    if (l.num)         meta.push('🔢 ' + l.num);
+    if (l.fournisseur) meta.push('🏭 ' + l.fournisseur);
+    if (l.qty)         meta.push('📏 ' + l.qty);
+    meta.push('📅 ' + expFmt);
+
+    var card = document.createElement('div');
+    card.className = 'rc';
+
+    var hdr = document.createElement('div');
+    hdr.className = 'rc-hdr';
+    hdr.innerHTML =
+      '<div class="rc-l">' +
+        '<div class="rc-name" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
+          (l.nom || '') + '&nbsp;' + lotBadge(l.exp) +
+        '</div>' +
+        '<div class="rc-meta">' + meta.join(' · ') + '</div>' +
+        (l.notes
+          ? '<div style="font-size:12px;color:var(--l2);margin-top:3px;font-style:italic">' + l.notes + '</div>'
+          : '') +
+      '</div>' +
+      '<div class="rc-r"><button class="rc-del">✕</button></div>';
+
+    hdr.addEventListener('click', (function(id) {
+      return function() { openLotModal(id); };
+    })(sid));
+    hdr.querySelector('.rc-del').addEventListener('click', (function(id) {
+      return function(e) { e.stopPropagation(); delLot(id); };
+    })(sid));
+
+    card.appendChild(hdr);
+    list.appendChild(card);
+  });
+}
+window.renderLots = renderLots;
 
 // ─── INIT ─────────────────────────────────────────────────────────────
 applyDark(); updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe(); applyI18n(); initAuth();
