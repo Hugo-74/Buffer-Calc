@@ -1096,8 +1096,14 @@ window.doSignOut = function() {
   waitFb(function(fb) {
     fb.signOut(fb.auth).then(function() {
       fbUser = null;
+      // Clear local data so next user starts fresh
+      localStorage.removeItem('buf_rec');
+      localStorage.removeItem('buf_abs');
       renderAuthNav();
       closeAuthModal();
+      updSavedBadge(); updAbBadge();
+      renderSaved && renderSaved();
+      renderAb && renderAb();
       toast(T('auth_signout_done')||'Déconnecté');
     });
   });
@@ -1136,34 +1142,17 @@ function syncFromCloud() {
   waitFb(function(fb) {
     var ref = fb.doc(fb.db, 'users', fbUser.uid);
     fb.getDoc(ref).then(function(snap) {
-      if (!snap.exists()) return;
-      var data = snap.data();
-      if (data.recipes) {
-        try {
-          var cloud = JSON.parse(data.recipes);
-          var local = getSaved();
-          // merge: cloud wins for same id, keep local-only items
-          var merged = cloud.slice();
-          local.forEach(function(l) {
-            if (!merged.find(function(c){return c.id===l.id;})) merged.push(l);
-          });
-          setSaved(merged);
-        } catch(e){}
-      }
-      if (data.antibodies) {
-        try {
-          var cloudAb = JSON.parse(data.antibodies);
-          var localAb = getAbs();
-          var mergedAb = cloudAb.slice();
-          localAb.forEach(function(l) {
-            if (!mergedAb.find(function(c){return c.id===l.id;})) mergedAb.push(l);
-          });
-          setAbs(mergedAb);
-        } catch(e){}
+      // Always clear local first to avoid mixing accounts
+      localStorage.removeItem('buf_rec');
+      localStorage.removeItem('buf_abs');
+      if (snap.exists()) {
+        var data = snap.data();
+        if (data.recipes)    { try { localStorage.setItem('buf_rec', data.recipes); } catch(e){} }
+        if (data.antibodies) { try { localStorage.setItem('buf_abs', data.antibodies); } catch(e){} }
+        toast('☁️ ' + (T('auth_synced_on_login')||'Données synchronisées'));
       }
       updSavedBadge(); updAbBadge();
       renderAuthNav();
-      toast('☁️ ' + (T('auth_synced_on_login')||'Données synchronisées'));
     });
   });
 }
