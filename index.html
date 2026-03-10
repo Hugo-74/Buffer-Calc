@@ -71,6 +71,23 @@ select.usel { border:none; outline:none; background:var(--fill); color:var(--blu
 .sb span { display:block; font-size:15px; margin-bottom:1px; }
 .sb.active { background:var(--surface); color:var(--l); box-shadow:0 1px 4px rgba(0,0,0,0.12); }
 
+/* DILUTION SERIES */
+.dil-table { width:100%; border-collapse:collapse; background:var(--surface); border-radius:var(--r); overflow:hidden; }
+.dil-table th { padding:10px 14px; text-align:left; font-size:11px; color:var(--l2); text-transform:uppercase; letter-spacing:0.06em; background:var(--bg); font-weight:600; }
+.dil-table th:last-child { text-align:right; }
+.dil-table td { padding:10px 14px; font-size:15px; border-top:0.5px solid var(--sep); }
+.dil-table td:last-child { text-align:right; font-weight:700; color:var(--blue); }
+.dil-table tr:first-child td { border-top:none; }
+.dil-badge { display:inline-block; font-size:11px; font-weight:600; padding:2px 7px; border-radius:6px; background:var(--blue-l); color:var(--blue); }
+.dil-stock-row { background:linear-gradient(90deg,rgba(0,122,255,0.06),transparent); }
+.dil-stock-row td:first-child { font-weight:600; }
+.cv-card { background:var(--surface); border-radius:var(--r); margin-bottom:20px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.05); }
+.dil-vis { display:flex; align-items:flex-end; gap:4px; padding:16px; background:var(--surface); border-radius:var(--r); margin-top:12px; overflow-x:auto; }
+.dil-bar-wrap { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:44px; }
+.dil-bar { width:36px; border-radius:6px 6px 0 0; background:linear-gradient(180deg,var(--blue),var(--teal)); transition:height 0.4s cubic-bezier(0.4,0,0.2,1); }
+.dil-bar-lbl { font-size:9px; color:var(--l2); text-align:center; line-height:1.2; }
+.dil-bar-val { font-size:10px; font-weight:600; color:var(--blue); text-align:center; }
+
 /* ING BLOCK */
 .ib-block { background:var(--surface); border-radius:var(--r); overflow:hidden; margin-bottom:12px; animation:sli 0.25s cubic-bezier(0.34,1.56,0.64,1); box-shadow:0 1px 3px rgba(0,0,0,0.05); }
 .ib-hdr { padding:11px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:0.5px solid var(--sep); }
@@ -285,6 +302,7 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
     <button class="tab-btn active" id="tab-calc" onclick="switchTab('calc')"><span class="ti">&#9879;&#65039;</span><span data-i18n="tab_calc">Calculer</span></button>
     <button class="tab-btn" id="tab-saved" onclick="switchTab('saved')"><span class="ti">&#128190;</span><span data-i18n="tab_saved">Recettes</span> <span id="saved-badge" style="display:none;background:var(--red);color:#fff;border-radius:10px;font-size:10px;padding:1px 5px;margin-left:2px"></span></button>
     <button class="tab-btn" id="tab-ab" onclick="switchTab('ab')"><span class="ti">&#128300;</span><span data-i18n="tab_ab">Anticorps</span> <span id="ab-badge" style="display:none;background:var(--purple);color:#fff;border-radius:10px;font-size:10px;padding:1px 5px;margin-left:2px"></span></button>
+    <button class="tab-btn" id="tab-dil" onclick="switchTab('dil')"><span class="ti">🧪</span><span data-i18n="tab_dil">Dilutions</span></button>
     <button class="tab-btn" id="tab-conv" onclick="switchTab('conv')"><span class="ti">&#9881;&#65039;</span><span data-i18n="tab_conv">Conversions</span></button>
   </div>
 </div>
@@ -395,6 +413,83 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 </div>
 </div>
 
+
+
+<!-- PAGE DILUTIONS SERIE -->
+<div class="page" id="page-dil">
+<div class="sc">
+
+  <div class="cv-card">
+    <div class="cv-hdr">
+      <div class="cv-ico" style="background:var(--purple)">🧪</div>
+      <div><div class="cv-ttl" data-i18n="dil_ttl">Dilution en série</div><div class="cv-sub" data-i18n="dil_sub">Anticorps, standards, IC50...</div></div>
+    </div>
+    <div class="cv-body">
+
+      <div class="cv-row">
+        <span class="cv-lbl" data-i18n="dil_stock_conc">Conc. stock</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="number" class="cv-inp" id="dil-stock" placeholder="1000" min="0" step="any" oninput="calcDil()">
+          <select class="usel" id="dil-unit" onchange="calcDil()">
+            <option>µg/mL</option><option>mg/mL</option><option>g/mL</option>
+            <option>mM</option><option>µM</option><option>nM</option>
+            <option>ng/mL</option><option>U/mL</option><option selected>x</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cv-row">
+        <span class="cv-lbl" data-i18n="dil_factor">Facteur de dilution</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="color:var(--l2);font-size:15px">1 :</span>
+          <input type="number" class="cv-inp" id="dil-factor" placeholder="2" min="1.01" step="any" value="2" oninput="calcDil()">
+        </div>
+      </div>
+
+      <div class="cv-row">
+        <span class="cv-lbl" data-i18n="dil_steps">Nombre de puits / étapes</span>
+        <input type="number" class="cv-inp" id="dil-steps" placeholder="8" min="2" max="24" step="1" value="8" oninput="calcDil()">
+      </div>
+
+      <div class="cv-row">
+        <span class="cv-lbl" data-i18n="dil_vol">Volume par puits</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="number" class="cv-inp" id="dil-vol" placeholder="100" min="0" step="any" value="100" oninput="calcDil()">
+          <span style="color:var(--l2);font-size:15px">µL</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="dil-results" style="display:none">
+
+    <!-- Visual bar chart -->
+    <div class="sh"><span class="sl" data-i18n="dil_visual">Visualisation</span></div>
+    <div class="dil-vis" id="dil-vis"></div>
+
+    <!-- Table -->
+    <div class="sh" style="margin-top:20px"><span class="sl" data-i18n="dil_protocol">Protocole</span></div>
+    <table class="dil-table" id="dil-table">
+      <thead><tr>
+        <th data-i18n="dil_th_well">Puits</th>
+        <th data-i18n="dil_th_conc">Concentration</th>
+        <th data-i18n="dil_th_sample">Volume échantillon</th>
+        <th data-i18n="dil_th_diluent">Volume diluant</th>
+      </tr></thead>
+      <tbody id="dil-tbody"></tbody>
+    </table>
+
+    <div style="margin-top:12px;display:flex;gap:10px">
+      <button class="btn-act" style="flex:1" onclick="copyDil()">&#128203; <span data-i18n="btn_copy_txt">Copier</span></button>
+      <button class="btn-act" style="flex:1" onclick="pdfDil()">&#128196; PDF</button>
+    </div>
+
+  </div>
+
+</div>
+</div>
 
 <!-- PAGE CONVERSIONS -->
 <div class="page" id="page-conv">
@@ -618,14 +713,146 @@ function parseDil(str) {
   return isNaN(n) ? null : n;
 }
 
+
+// ─── DILUTION EN SERIE ───────────────────────────────────────────────
+function fmtDilConc(val, unit) {
+  if (val === 0) return '0';
+  // auto-scale small values
+  if (unit === 'mM' && val < 0.001) return (val*1e6).toPrecision(3)+' pM';
+  if (unit === 'mM' && val < 1)     return (val*1000).toPrecision(3)+' µM';
+  if (unit === 'µM' && val < 0.001) return (val*1e6).toPrecision(3)+' fM';
+  if (unit === 'µM' && val < 1)     return (val*1000).toPrecision(3)+' nM';
+  if (unit === 'µg/mL' && val < 0.001) return (val*1e6).toPrecision(3)+' pg/mL';
+  if (unit === 'µg/mL' && val < 1)     return (val*1000).toPrecision(3)+' ng/mL';
+  if (unit === 'ng/mL' && val < 1)     return (val*1000).toPrecision(3)+' pg/mL';
+  if (unit === 'x' || !unit) return val < 0.01 ? '1:'+Math.round(1/val) : val.toPrecision(3)+'x';
+  var display = val < 0.01 ? val.toExponential(2) : val.toPrecision(4);
+  return display+' '+unit;
+}
+
+window.calcDil = function() {
+  var stock  = parseFloat(document.getElementById('dil-stock').value);
+  var factor = parseFloat(document.getElementById('dil-factor').value);
+  var steps  = parseInt(document.getElementById('dil-steps').value);
+  var volUL  = parseFloat(document.getElementById('dil-vol').value);
+  var unit   = document.getElementById('dil-unit').value;
+
+  var res = document.getElementById('dil-results');
+  if (!stock || !factor || factor<=1 || !steps || steps<2 || !volUL) { res.style.display='none'; return; }
+  steps = Math.min(steps, 24);
+  res.style.display = 'block';
+
+  // build series
+  var series = [];
+  var c = stock;
+  for (var i=0; i<steps; i++) {
+    var volSample  = volUL / factor;           // µL of previous well to take
+    var volDiluent = volUL - volSample;        // µL of diluent to add
+    series.push({ step:i+1, conc:c, volSample:volSample, volDiluent:volDiluent });
+    c = c / factor;
+  }
+
+  // render bar chart
+  var vis = document.getElementById('dil-vis');
+  var maxC = series[0].conc;
+  var maxH = 80;
+  vis.innerHTML = series.map(function(s,i) {
+    var h = Math.max(4, Math.round((Math.log10(s.conc/series[series.length-1].conc)+0.01) / (Math.log10(maxC/series[series.length-1].conc)+0.01) * maxH));
+    var lbl = i===0 ? T('dil_stock_short') : s.step-1+'→'+s.step;
+    return '<div class="dil-bar-wrap">'+
+      '<div class="dil-bar-val">'+fmtDilConc(s.conc,unit)+'</div>'+
+      '<div class="dil-bar" style="height:'+h+'px"></div>'+
+      '<div class="dil-bar-lbl">'+lbl+'</div>'+
+    '</div>';
+  }).join('');
+
+  // render table
+  var tbody = document.getElementById('dil-tbody');
+  tbody.innerHTML = '';
+  series.forEach(function(s, i) {
+    var tr = document.createElement('tr');
+    if (i===0) tr.className = 'dil-stock-row';
+    var wellLbl = i===0 ? T('dil_stock_short') : T('dil_well')+' '+s.step;
+    var sampleStr = i===0
+      ? fmtDilConc(s.volSample, 'µL')+' '+T('dil_of_stock')
+      : fmtDilConc(s.volSample, 'µL')+' '+T('dil_of_prev');
+    tr.innerHTML =
+      '<td><span class="dil-badge" style="background:'+(i===0?'rgba(0,122,255,0.12)':'rgba(175,82,222,0.1)')+';color:'+(i===0?'var(--blue)':'var(--purple)')+'">'+wellLbl+'</span></td>'+
+      '<td>'+fmtDilConc(s.conc, unit)+'</td>'+
+      '<td>'+sampleStr+'</td>'+
+      '<td>'+s.volDiluent.toFixed(1)+' µL</td>';
+    tbody.appendChild(tr);
+  });
+};
+
+window.copyDil = function() {
+  var stock  = document.getElementById('dil-stock').value;
+  var factor = document.getElementById('dil-factor').value;
+  var unit   = document.getElementById('dil-unit').value;
+  var rows   = document.querySelectorAll('#dil-tbody tr');
+  var t = T('dil_ttl')+' 1:'+factor+' — '+T('dil_stock_conc')+': '+stock+' '+unit+'\n'+'—'.repeat(40)+'\n';
+  t += (T('dil_th_well')+'	'+T('dil_th_conc')+'	'+T('dil_th_sample')+'	'+T('dil_th_diluent')+'\n');
+  rows.forEach(function(r) {
+    var cells = r.querySelectorAll('td');
+    t += Array.from(cells).map(function(td){return td.textContent.trim();}).join('	')+'\n';
+  });
+  navigator.clipboard.writeText(t).then(function(){ toast(T('copied')+' !'); });
+};
+
+window.pdfDil = function() {
+  var stock  = document.getElementById('dil-stock').value;
+  var factor = document.getElementById('dil-factor').value;
+  var steps  = document.getElementById('dil-steps').value;
+  var vol    = document.getElementById('dil-vol').value;
+  var unit   = document.getElementById('dil-unit').value;
+  var rows   = document.querySelectorAll('#dil-tbody tr');
+  var rowsHtml = Array.from(rows).map(function(r,i){
+    var bg = i%2===0?'#f8f9fb':'#fff';
+    var cells = r.querySelectorAll('td');
+    return '<tr style="background:'+bg+'">'+Array.from(cells).map(function(td){
+      return '<td style="padding:9px 14px;font-size:13px;border-top:0.5px solid #e5e7eb">'+td.innerHTML+'</td>';
+    }).join('')+'</tr>';
+  }).join('');
+  var locale = LANG==='en'?'en-GB':'fr-FR';
+  var date = new Date().toLocaleDateString(locale,{day:'2-digit',month:'long',year:'numeric'});
+  var html =
+    '<div style="font-family:-apple-system,Helvetica Neue,sans-serif;max-width:680px;margin:0 auto;padding:32px 24px;color:#1a1a1a">'+
+    '<div style="background:linear-gradient(135deg,#af52de,#7a34c8);border-radius:16px;padding:24px 28px;color:#fff;margin-bottom:24px">'+
+      '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;opacity:0.7;margin-bottom:6px">'+T('dil_ttl')+'</div>'+
+      '<div style="font-size:28px;font-weight:700;letter-spacing:-0.5px;margin-bottom:16px">1:'+factor+' × '+steps+' '+T('dil_steps_short')+'</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'+
+        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+stock+' '+unit+'</div><div style="font-size:11px;opacity:0.7;margin-top:2px">'+T('dil_stock_conc')+'</div></div>'+
+        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+vol+' µL</div><div style="font-size:11px;opacity:0.7;margin-top:2px">'+T('dil_vol')+'</div></div>'+
+        '<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 12px"><div style="font-size:18px;font-weight:700">'+date+'</div><div style="font-size:11px;opacity:0.7;margin-top:2px">'+T('pdf_date')+'</div></div>'+
+      '</div>'+
+    '</div>'+
+    '<table style="width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e5e7eb">'+
+      '<thead><tr style="background:#f2f4f7">'+
+        '<th style="padding:11px 14px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">'+T('dil_th_well')+'</th>'+
+        '<th style="padding:11px 14px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">'+T('dil_th_conc')+'</th>'+
+        '<th style="padding:11px 14px;text-align:left;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">'+T('dil_th_sample')+'</th>'+
+        '<th style="padding:11px 14px;text-align:right;font-size:12px;color:#666;text-transform:uppercase;letter-spacing:0.06em">'+T('dil_th_diluent')+'</th>'+
+      '</tr></thead>'+
+      '<tbody>'+rowsHtml+'</tbody>'+
+    '</table>'+
+    '<div style="text-align:center;font-size:11px;color:#aaa;margin-top:20px">Buffer Calculator &bull; '+date+'</div>'+
+    '</div>';
+  var win = window.open('','_blank','width=820,height=700');
+  if (!win) { toast(T('err_popup')||'Autorisez les popups'); return; }
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+T('dil_ttl')+'</title><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#fff}@media print{@page{margin:15mm}}</style></head><body>'+html+'</body></html>');
+  win.document.close(); win.focus();
+  setTimeout(function(){ win.print(); win.close(); }, 400);
+};
+
 // ─── TABS ─────────────────────────────────────────────────────────────
 window.switchTab = function(tab) {
-  ['calc','saved','ab','conv'].forEach(function(t) {
+  ['calc','saved','ab','dil','conv'].forEach(function(t) {
     document.getElementById('page-'+t).classList.toggle('active', t===tab);
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
   });
   if (tab === 'saved') renderSaved();
   if (tab === 'ab')    renderAb();
+  if (tab === 'dil')   calcDil();
 };
 
 // ─── PROGRESS ─────────────────────────────────────────────────────────
@@ -1385,6 +1612,16 @@ var LANG = localStorage.getItem('buf_lang') || 'fr';
 
 var I18N = {
   fr: {
+    tab_dil:'Dilutions',
+    dil_ttl:'Dilution en série', dil_sub:'Anticorps, standards, IC50...',
+    dil_stock_conc:'Conc. stock', dil_factor:'Facteur de dilution',
+    dil_steps:'Nombre de puits', dil_vol:'Volume par puits',
+    dil_visual:'Visualisation', dil_protocol:'Protocole',
+    dil_th_well:'Puits', dil_th_conc:'Concentration',
+    dil_th_sample:'Vol. échantillon', dil_th_diluent:'Vol. diluant',
+    dil_stock_short:'Stock', dil_well:'Puits',
+    dil_of_stock:'du stock', dil_of_prev:'du puits précédent',
+    dil_steps_short:'étapes', err_popup:'Autorisez les popups pour imprimer',
     tab_calc:'Calculer', tab_saved:'Recettes', tab_ab:'Anticorps', tab_conv:'Conversions',
     sl_solution:'Solution', rl_name:'Nom', rl_volume:'Volume',
     sf_vol_hint:"Volume final vise, apres ajout de tous les reactifs et complement a l'eau.",
@@ -1446,6 +1683,16 @@ var I18N = {
     share_modal_title:'\ud83d\udd17 Partager la recette',
   },
   en: {
+    tab_dil:'Dilutions',
+    dil_ttl:'Serial dilution', dil_sub:'Antibodies, standards, IC50...',
+    dil_stock_conc:'Stock conc.', dil_factor:'Dilution factor',
+    dil_steps:'Number of wells', dil_vol:'Volume per well',
+    dil_visual:'Visualization', dil_protocol:'Protocol',
+    dil_th_well:'Well', dil_th_conc:'Concentration',
+    dil_th_sample:'Sample vol.', dil_th_diluent:'Diluent vol.',
+    dil_stock_short:'Stock', dil_well:'Well',
+    dil_of_stock:'from stock', dil_of_prev:'from prev. well',
+    dil_steps_short:'steps', err_popup:'Allow popups to print',
     tab_calc:'Calculate', tab_saved:'Recipes', tab_ab:'Antibodies', tab_conv:'Conversions',
     sl_solution:'Solution', rl_name:'Name', rl_volume:'Volume',
     sf_vol_hint:'Final target volume, after adding all reagents and water to volume.',
