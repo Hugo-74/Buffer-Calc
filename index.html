@@ -296,6 +296,38 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 .auth-prov-btn svg { flex-shrink:0; }
 .auth-sync-badge { font-size:10px; font-weight:600; padding:2px 6px; border-radius:6px; background:var(--green-l); color:#1a7a35; margin-left:4px; }
 
+
+[data-theme="dark"] {
+  --bg:#1c1c1e; --surface:#2c2c2e;
+  --sep:rgba(255,255,255,0.1); --sep-o:rgba(255,255,255,0.15);
+  --l:#fff; --l2:rgba(255,255,255,0.55); --l3:rgba(255,255,255,0.25);
+  --blue:#0a84ff; --blue-l:rgba(10,132,255,0.18);
+  --red:#ff453a; --red-l:rgba(255,69,58,0.18);
+  --green:#30d158; --green-l:rgba(48,209,88,0.18);
+  --teal:#64d2ff; --purple:#bf5af2; --orange:#ff9f0a;
+  --fill:rgba(255,255,255,0.08);
+}
+[data-theme="dark"] .nav { background:rgba(28,28,30,0.88); }
+[data-theme="dark"] .tab-wrap { background:rgba(28,28,30,0.92); }
+[data-theme="dark"] .sc-inp { background:#3a3a3c; border-color:rgba(255,255,255,0.1); color:#fff; }
+[data-theme="dark"] .mo-box { background:#2c2c2e; }
+[data-theme="dark"] .mo-inp { background:#3a3a3c; color:#fff; border-color:rgba(255,255,255,0.1); }
+[data-theme="dark"] .auth-prov-btn { background:#3a3a3c; border-color:rgba(255,255,255,0.1); color:#fff; }
+[data-theme="dark"] .scale-box { background:rgba(10,132,255,0.08); }
+[data-theme="dark"] select.usel { background:rgba(255,255,255,0.1); }
+[data-theme="dark"] .dil-table { background:#2c2c2e; }
+[data-theme="dark"] .dil-table th { background:#1c1c1e; }
+[data-theme="dark"] input { color:#fff; }
+[data-theme="dark"] .rc { background:#2c2c2e; }
+[data-theme="dark"] .ab-tsb { color:rgba(255,255,255,0.55); }
+[data-theme="dark"] .ab-tsb.active { background:#3a3a3c; color:#fff; }
+[data-theme="dark"] .cv-card { background:#2c2c2e; }
+[data-theme="dark"] .ib-block { background:#2c2c2e; }
+[data-theme="dark"] .btn-add { background:#2c2c2e; }
+[data-theme="dark"] .btn-act { background:#2c2c2e; }
+[data-theme="dark"] .group { background:#2c2c2e; }
+[data-theme="dark"] .ab-field input, [data-theme="dark"] .ab-field select { background:#3a3a3c; color:#fff; }
+
 @keyframes sli { from{opacity:0;transform:translateY(10px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
 </style>
 <!-- Firebase SDK -->
@@ -331,7 +363,7 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 
 <div class="nav">
   <div class="nav-inner">
-    <span class="nav-badge">Lab</span>
+    <div style="display:flex;align-items:center;gap:6px"><span class="nav-badge">Lab</span><button class="lang-btn" id="dark-btn" onclick="toggleDark()" title="Dark mode">☀️</button></div>
     <div style="text-align:center">
       <div class="nav-title">Buffer Calculator</div>
       <div class="nav-step" id="nav-step" style="font-size:11px;margin-top:1px">0 reactif</div>
@@ -1167,6 +1199,26 @@ var _origSetAbs = setAbs;
 setAbs = function(a) {
   _origSetAbs(a);
   if (fbUser) pushToCloud();
+};
+
+
+// ─── DARK MODE ────────────────────────────────────────────────────────
+var _savedDark = localStorage.getItem('buf_dark');
+var DARK = _savedDark !== null ? _savedDark === '1' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+function applyDark() {
+  document.documentElement.setAttribute('data-theme', DARK ? 'dark' : 'light');
+  var btn = document.getElementById('dark-btn');
+  if (btn) btn.textContent = DARK ? '🌙' : '☀️';
+  // Update meta theme-color
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = DARK ? '#1c1c1e' : '#007aff';
+}
+
+window.toggleDark = function() {
+  DARK = !DARK;
+  localStorage.setItem('buf_dark', DARK ? '1' : '0');
+  applyDark();
 };
 
 // ─── TABS ─────────────────────────────────────────────────────────────
@@ -2304,7 +2356,7 @@ window.cvTempFrom = function(from) {
 };
 
 // ─── INIT ─────────────────────────────────────────────────────────────
-updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe(); applyI18n(); initAuth();
+applyDark(); updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe(); applyI18n(); initAuth();
 
 })();
 </script>
