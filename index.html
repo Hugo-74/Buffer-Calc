@@ -283,16 +283,58 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 .cv-dsb { flex:1; border:none; background:transparent; font-family:inherit; font-size:12px; font-weight:500; color:var(--l2); padding:6px 4px; border-radius:7px; cursor:pointer; transition:all 0.18s; text-align:center; }
 .cv-dsb.active { background:var(--surface); color:var(--l); box-shadow:0 1px 3px rgba(0,0,0,0.1); }
 
+
+/* AUTH */
+.auth-btn { display:flex; align-items:center; gap:6px; padding:5px 11px; border-radius:100px; border:none; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+.auth-btn-login { background:var(--blue); color:#fff; }
+.auth-btn-login:active { opacity:0.8; }
+.auth-avatar { width:28px; height:28px; border-radius:50%; object-fit:cover; cursor:pointer; border:2px solid rgba(255,255,255,0.3); }
+.auth-avatar-placeholder { width:28px; height:28px; border-radius:50%; background:var(--blue); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.mo-auth-prov { display:flex; flex-direction:column; gap:10px; margin:16px 0; }
+.auth-prov-btn { display:flex; align-items:center; gap:12px; padding:13px 16px; border-radius:var(--r); border:1px solid var(--sep-o); background:var(--surface); font-family:inherit; font-size:15px; font-weight:500; color:var(--l); cursor:pointer; transition:all 0.15s; width:100%; }
+.auth-prov-btn:active { opacity:0.7; }
+.auth-prov-btn svg { flex-shrink:0; }
+.auth-sync-badge { font-size:10px; font-weight:600; padding:2px 6px; border-radius:6px; background:var(--green-l); color:#1a7a35; margin-left:4px; }
+
 @keyframes sli { from{opacity:0;transform:translateY(10px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
 </style>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+  import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
+    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAdyrPP9Q1BHAWKo8ZQP3oh7DdgyYkjO7c",
+    authDomain: "buffer-calc.firebaseapp.com",
+    projectId: "buffer-calc",
+    storageBucket: "buffer-calc.firebasestorage.app",
+    messagingSenderId: "241778110382",
+    appId: "1:241778110382:web:4e8226c29370e876ede23f"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // Expose to main script
+  window._fb = { auth, db, signInWithPopup, signOut,
+    GoogleAuthProvider, onAuthStateChanged,
+    doc, setDoc, getDoc, collection, getDocs, deleteDoc };
+</script>
 </head>
 <body>
 
 <div class="nav">
   <div class="nav-inner">
     <span class="nav-badge">Lab</span>
-    <span class="nav-title" style="text-align:center">Buffer Calculator</span>
-    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px"><span class="nav-step" id="nav-step">0 reactif</span><button class="lang-btn" id="lang-btn" onclick="toggleLang()">EN</button></div>
+    <div style="text-align:center">
+      <div class="nav-title">Buffer Calculator</div>
+      <div class="nav-step" id="nav-step" style="font-size:11px;margin-top:1px">0 reactif</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px"><button class="lang-btn" id="lang-btn" onclick="toggleLang()">EN</button><div id="auth-nav"></div></div>
   </div>
   <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
 </div>
@@ -602,6 +644,41 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 
 </div>
 </div>
+<!-- MODAL AUTH -->
+<div class="mo" id="mo-auth" onclick="if(event.target===this)closeAuthModal()">
+  <div class="mo-box">
+    <div class="mo-handle"></div>
+    <div id="mo-auth-login" style="display:none">
+      <div style="text-align:center;padding:8px 0 4px">
+        <div style="font-size:36px">🔬</div>
+        <div class="mo-title" style="margin-top:8px" data-i18n="auth_title">Se connecter</div>
+        <div style="font-size:14px;color:var(--l2);margin-top:4px" data-i18n="auth_sub">Sync vos recettes et anticorps sur tous vos appareils</div>
+      </div>
+      <div class="mo-auth-prov">
+        <button class="auth-prov-btn" onclick="signInWith('google')">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continuer avec Google
+        </button>
+
+      </div>
+      <p style="font-size:12px;color:var(--l3);text-align:center;line-height:1.5" data-i18n="auth_privacy">Vos données sont privées et synchronisées de façon sécurisée.</p>
+    </div>
+    <div id="mo-auth-profile" style="display:none">
+      <div style="text-align:center;padding:8px 0 12px">
+        <img id="auth-prof-avatar" src="" width="64" height="64" style="border-radius:50%;border:3px solid var(--blue-l);margin-bottom:8px">
+        <div style="font-size:17px;font-weight:600" id="auth-prof-name"></div>
+        <div style="font-size:13px;color:var(--l2)" id="auth-prof-email"></div>
+        <div style="margin-top:8px;display:flex;justify-content:center;gap:8px">
+          <span style="font-size:12px;background:var(--green-l);color:#1a7a35;padding:3px 9px;border-radius:8px;font-weight:600" id="auth-prof-recipes"></span>
+          <span style="font-size:12px;background:rgba(175,82,222,0.1);color:var(--purple);padding:3px 9px;border-radius:8px;font-weight:600" id="auth-prof-abs"></span>
+        </div>
+      </div>
+      <button class="mo-btn mo-ok" style="width:100%;background:var(--blue);margin-bottom:10px" onclick="syncNow()">☁️ <span data-i18n="auth_sync_now">Synchroniser maintenant</span></button>
+      <button class="mo-btn mo-cancel" style="width:100%;color:var(--red)" onclick="doSignOut()">↩️ <span data-i18n="auth_signout">Se déconnecter</span></button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL SAVE RECETTE -->
 <div class="mo" id="mo-save" onclick="if(event.target===this)closeSaveModal()">
   <div class="mo-box">
@@ -842,6 +919,168 @@ window.pdfDil = function() {
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+T('dil_ttl')+'</title><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#fff}@media print{@page{margin:15mm}}</style></head><body>'+html+'</body></html>');
   win.document.close(); win.focus();
   setTimeout(function(){ win.print(); win.close(); }, 400);
+};
+
+
+// ─── FIREBASE AUTH & SYNC ─────────────────────────────────────────────
+var fbUser = null;
+var fbReady = false;
+
+function waitFb(cb) {
+  if (window._fb) { cb(window._fb); }
+  else { setTimeout(function(){ waitFb(cb); }, 100); }
+}
+
+function initAuth() {
+  waitFb(function(fb) {
+    fb.onAuthStateChanged(fb.auth, function(user) {
+      fbUser = user;
+      fbReady = true;
+      renderAuthNav();
+      if (user) {
+        syncFromCloud();
+      }
+    });
+  });
+}
+
+function renderAuthNav() {
+  var el = document.getElementById('auth-nav');
+  if (!el) return;
+  if (!fbUser) {
+    el.innerHTML = '<button class="auth-btn auth-btn-login" onclick="openAuthModal()">&#128100; <span data-i18n="btn_login">Connexion</span></button>';
+  } else {
+    var photo = fbUser.photoURL;
+    if (photo) {
+      el.innerHTML = '<img class="auth-avatar" src="'+photo+'" onclick="openAuthModal()" title="'+fbUser.displayName+'">';
+    } else {
+      var ini = (fbUser.displayName||fbUser.email||'?')[0].toUpperCase();
+      el.innerHTML = '<div class="auth-avatar-placeholder" onclick="openAuthModal()">'+ini+'</div>';
+    }
+  }
+  applyI18n();
+}
+
+window.openAuthModal = function() {
+  var modal = document.getElementById('mo-auth');
+  if (!fbUser) {
+    document.getElementById('mo-auth-login').style.display = 'block';
+    document.getElementById('mo-auth-profile').style.display = 'none';
+  } else {
+    document.getElementById('mo-auth-login').style.display = 'none';
+    document.getElementById('mo-auth-profile').style.display = 'block';
+    document.getElementById('auth-prof-avatar').src = fbUser.photoURL || '';
+    document.getElementById('auth-prof-name').textContent = fbUser.displayName || '';
+    document.getElementById('auth-prof-email').textContent = fbUser.email || '';
+    document.getElementById('auth-prof-recipes').textContent = getSaved().length + ' ' + T('tab_saved');
+    document.getElementById('auth-prof-abs').textContent = getAbs().length + ' ' + T('tab_ab');
+  }
+  modal.classList.add('show');
+};
+window.closeAuthModal = function() {
+  document.getElementById('mo-auth').classList.remove('show');
+};
+
+window.signInWith = function(provider) {
+  waitFb(function(fb) {
+    var p = new fb.GoogleAuthProvider();
+    fb.signInWithPopup(fb.auth, p)
+      .then(function(result) {
+        closeAuthModal();
+        toast('👋 ' + result.user.displayName);
+      })
+      .catch(function(err) {
+        toast('Erreur: ' + err.message.substring(0, 60));
+      });
+  });
+};
+
+window.doSignOut = function() {
+  waitFb(function(fb) {
+    fb.signOut(fb.auth).then(function() {
+      fbUser = null;
+      renderAuthNav();
+      closeAuthModal();
+      toast(T('auth_signout_done')||'Déconnecté');
+    });
+  });
+};
+
+// ─── CLOUD SYNC ───────────────────────────────────────────────────────
+function userPath(col) {
+  return 'users/' + fbUser.uid + '/' + col;
+}
+
+window.syncNow = function() {
+  if (!fbUser) return;
+  toast('☁️ ' + (T('auth_syncing')||'Synchronisation...'));
+  pushToCloud(function() {
+    toast('✅ ' + (T('auth_sync_done')||'Synchronisé !'));
+    closeAuthModal();
+  });
+};
+
+function pushToCloud(cb) {
+  if (!fbUser) { if(cb) cb(); return; }
+  waitFb(function(fb) {
+    var saved = getSaved();
+    var abs   = getAbs();
+    var ref = fb.doc(fb.db, 'users', fbUser.uid);
+    fb.setDoc(ref, {
+      recipes:   JSON.stringify(saved),
+      antibodies: JSON.stringify(abs),
+      updatedAt: Date.now()
+    }, { merge: true }).then(function(){ if(cb) cb(); });
+  });
+}
+
+function syncFromCloud() {
+  if (!fbUser) return;
+  waitFb(function(fb) {
+    var ref = fb.doc(fb.db, 'users', fbUser.uid);
+    fb.getDoc(ref).then(function(snap) {
+      if (!snap.exists()) return;
+      var data = snap.data();
+      if (data.recipes) {
+        try {
+          var cloud = JSON.parse(data.recipes);
+          var local = getSaved();
+          // merge: cloud wins for same id, keep local-only items
+          var merged = cloud.slice();
+          local.forEach(function(l) {
+            if (!merged.find(function(c){return c.id===l.id;})) merged.push(l);
+          });
+          setSaved(merged);
+        } catch(e){}
+      }
+      if (data.antibodies) {
+        try {
+          var cloudAb = JSON.parse(data.antibodies);
+          var localAb = getAbs();
+          var mergedAb = cloudAb.slice();
+          localAb.forEach(function(l) {
+            if (!mergedAb.find(function(c){return c.id===l.id;})) mergedAb.push(l);
+          });
+          setAbs(mergedAb);
+        } catch(e){}
+      }
+      updSavedBadge(); updAbBadge();
+      renderAuthNav();
+      toast('☁️ ' + (T('auth_synced_on_login')||'Données synchronisées'));
+    });
+  });
+}
+
+// Auto-push on save/delete
+var _origSetSaved = setSaved;
+setSaved = function(a) {
+  _origSetSaved(a);
+  if (fbUser) pushToCloud();
+};
+var _origSetAbs = setAbs;
+setAbs = function(a) {
+  _origSetAbs(a);
+  if (fbUser) pushToCloud();
 };
 
 // ─── TABS ─────────────────────────────────────────────────────────────
@@ -1612,6 +1851,12 @@ var LANG = localStorage.getItem('buf_lang') || 'fr';
 
 var I18N = {
   fr: {
+    btn_login:'Connexion',
+    auth_title:'Se connecter', auth_sub:'Synchronisez sur tous vos appareils',
+    auth_privacy:'Vos données sont privées et sécurisées.',
+    auth_sync_now:'Synchroniser', auth_signout:'Se déconnecter',
+    auth_signout_done:'Déconnecté', auth_syncing:'Synchronisation...',
+    auth_sync_done:'Synchronisé !', auth_synced_on_login:'Données synchronisées',
     tab_dil:'Dilutions',
     dil_ttl:'Dilution en série', dil_sub:'Anticorps, standards, IC50...',
     dil_stock_conc:'Conc. stock', dil_factor:'Facteur de dilution',
@@ -1683,6 +1928,18 @@ var I18N = {
     share_modal_title:'\ud83d\udd17 Partager la recette',
   },
   en: {
+    btn_login:'Connexion',
+    auth_title:'Se connecter', auth_sub:'Synchronisez sur tous vos appareils',
+    auth_privacy:'Vos données sont privées et sécurisées.',
+    auth_sync_now:'Synchroniser', auth_signout:'Se déconnecter',
+    auth_signout_done:'Déconnecté', auth_syncing:'Synchronisation...',
+    auth_sync_done:'Synchronisé !', auth_synced_on_login:'Données synchronisées',
+    btn_login:'Sign in',
+    auth_title:'Sign in', auth_sub:'Sync across all your devices',
+    auth_privacy:'Your data is private and securely synced.',
+    auth_sync_now:'Sync now', auth_signout:'Sign out',
+    auth_signout_done:'Signed out', auth_syncing:'Syncing...',
+    auth_sync_done:'Synced!', auth_synced_on_login:'Data synced',
     tab_dil:'Dilutions',
     dil_ttl:'Serial dilution', dil_sub:'Antibodies, standards, IC50...',
     dil_stock_conc:'Stock conc.', dil_factor:'Dilution factor',
@@ -1958,7 +2215,7 @@ window.cvTempFrom = function(from) {
 };
 
 // ─── INIT ─────────────────────────────────────────────────────────────
-updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe(); applyI18n();
+updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe(); applyI18n(); initAuth();
 
 })();
 </script>
