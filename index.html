@@ -301,7 +301,8 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-  import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged }
+  import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
@@ -322,6 +323,7 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
   // Expose to main script
   window._fb = { auth, db, signInWithPopup, signOut,
     GoogleAuthProvider, onAuthStateChanged,
+    createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
     doc, setDoc, getDoc, collection, getDocs, deleteDoc };
 </script>
 </head>
@@ -654,14 +656,44 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
         <div class="mo-title" style="margin-top:8px" data-i18n="auth_title">Se connecter</div>
         <div style="font-size:14px;color:var(--l2);margin-top:4px" data-i18n="auth_sub">Sync vos recettes et anticorps sur tous vos appareils</div>
       </div>
-      <div class="mo-auth-prov">
+
+      <!-- Google -->
+      <div class="mo-auth-prov" style="margin-bottom:0">
         <button class="auth-prov-btn" onclick="signInWith('google')">
           <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Continuer avec Google
         </button>
-
       </div>
-      <p style="font-size:12px;color:var(--l3);text-align:center;line-height:1.5" data-i18n="auth_privacy">Vos données sont privées et synchronisées de façon sécurisée.</p>
+
+      <!-- Divider -->
+      <div style="display:flex;align-items:center;gap:10px;margin:14px 0">
+        <div style="flex:1;height:0.5px;background:var(--sep)"></div>
+        <span style="font-size:12px;color:var(--l3)" data-i18n="auth_or">ou</span>
+        <div style="flex:1;height:0.5px;background:var(--sep)"></div>
+      </div>
+
+      <!-- Email/password -->
+      <div id="auth-email-panel">
+        <!-- Tabs: login / register -->
+        <div style="display:flex;background:var(--fill);border-radius:9px;padding:2px;gap:2px;margin-bottom:12px">
+          <button class="sb active" id="auth-tab-login" onclick="authSwitchTab('login')" style="flex:1" data-i18n="auth_tab_login">Connexion</button>
+          <button class="sb" id="auth-tab-register" onclick="authSwitchTab('register')" style="flex:1" data-i18n="auth_tab_register">Créer un compte</button>
+        </div>
+        <input class="mo-inp" id="auth-email" type="email" placeholder="email@exemple.com" style="margin-bottom:8px">
+        <input class="mo-inp" id="auth-pwd" type="password" placeholder="Mot de passe" data-i18n-ph="auth_ph_pwd" style="margin-bottom:4px">
+        <div id="auth-pwd-confirm-wrap" style="display:none;margin-bottom:4px">
+          <input class="mo-inp" id="auth-pwd2" type="password" placeholder="Confirmer le mot de passe" data-i18n-ph="auth_ph_pwd2">
+        </div>
+        <div style="text-align:right;margin-bottom:10px">
+          <button id="auth-forgot-btn" onclick="authForgotPassword()" style="background:none;border:none;font-family:inherit;font-size:12px;color:var(--blue);cursor:pointer" data-i18n="auth_forgot">Mot de passe oublié ?</button>
+        </div>
+        <button class="btn-pri" onclick="authEmailSubmit()" id="auth-email-submit">
+          <span data-i18n="auth_tab_login">Connexion</span>
+        </button>
+        <div id="auth-email-err" style="font-size:13px;color:var(--red);text-align:center;margin-top:8px;min-height:18px"></div>
+      </div>
+
+      <p style="font-size:12px;color:var(--l3);text-align:center;line-height:1.5;margin-top:12px" data-i18n="auth_privacy">Vos données sont privées et synchronisées de façon sécurisée.</p>
     </div>
     <div id="mo-auth-profile" style="display:none">
       <div style="text-align:center;padding:8px 0 12px">
@@ -921,6 +953,71 @@ window.pdfDil = function() {
   setTimeout(function(){ win.print(); win.close(); }, 400);
 };
 
+
+
+// ─── EMAIL / PASSWORD AUTH ────────────────────────────────────────────
+var authEmailMode = 'login'; // 'login' | 'register'
+
+window.authSwitchTab = function(mode) {
+  authEmailMode = mode;
+  ['login','register'].forEach(function(t) {
+    document.getElementById('auth-tab-'+t).classList.toggle('active', t===mode);
+  });
+  var isReg = mode === 'register';
+  document.getElementById('auth-pwd-confirm-wrap').style.display = isReg ? 'block' : 'none';
+  document.getElementById('auth-forgot-btn').style.display = isReg ? 'none' : 'block';
+  var btn = document.getElementById('auth-email-submit').querySelector('span');
+  if (btn) btn.setAttribute('data-i18n', isReg ? 'auth_tab_register' : 'auth_tab_login');
+  if (btn) btn.textContent = T(isReg ? 'auth_tab_register' : 'auth_tab_login');
+  document.getElementById('auth-email-err').textContent = '';
+};
+
+window.authEmailSubmit = function() {
+  var email = document.getElementById('auth-email').value.trim();
+  var pwd   = document.getElementById('auth-pwd').value;
+  var err   = document.getElementById('auth-email-err');
+  err.textContent = '';
+  if (!email || !pwd) { err.textContent = T('auth_err_fields')||'Remplissez tous les champs'; return; }
+  if (authEmailMode === 'register') {
+    var pwd2 = document.getElementById('auth-pwd2').value;
+    if (pwd !== pwd2) { err.textContent = T('auth_err_pwd_match')||'Les mots de passe ne correspondent pas'; return; }
+    if (pwd.length < 6) { err.textContent = T('auth_err_pwd_short')||'Minimum 6 caractères'; return; }
+    waitFb(function(fb) {
+      fb.createUserWithEmailAndPassword(fb.auth, email, pwd)
+        .then(function(r) { closeAuthModal(); toast('👋 '+r.user.email); })
+        .catch(function(e) { err.textContent = authErrMsg(e.code); });
+    });
+  } else {
+    waitFb(function(fb) {
+      fb.signInWithEmailAndPassword(fb.auth, email, pwd)
+        .then(function(r) { closeAuthModal(); toast('👋 '+r.user.email); })
+        .catch(function(e) { err.textContent = authErrMsg(e.code); });
+    });
+  }
+};
+
+window.authForgotPassword = function() {
+  var email = document.getElementById('auth-email').value.trim();
+  var err   = document.getElementById('auth-email-err');
+  if (!email) { err.textContent = T('auth_err_email')||'Entrez votre email'; return; }
+  waitFb(function(fb) {
+    fb.sendPasswordResetEmail(fb.auth, email)
+      .then(function() { err.style.color='var(--green)'; err.textContent = T('auth_reset_sent')||'Email envoyé !'; })
+      .catch(function(e) { err.style.color='var(--red)'; err.textContent = authErrMsg(e.code); });
+  });
+};
+
+function authErrMsg(code) {
+  var msgs = {
+    'auth/user-not-found':     T('auth_err_no_user')    || 'Aucun compte avec cet email',
+    'auth/wrong-password':     T('auth_err_wrong_pwd')  || 'Mot de passe incorrect',
+    'auth/email-already-in-use': T('auth_err_email_used') || 'Email déjà utilisé',
+    'auth/invalid-email':      T('auth_err_invalid_email') || 'Email invalide',
+    'auth/too-many-requests':  T('auth_err_too_many')   || 'Trop de tentatives, réessayez plus tard',
+    'auth/invalid-credential': T('auth_err_wrong_pwd')  || 'Email ou mot de passe incorrect'
+  };
+  return msgs[code] || code;
+}
 
 // ─── FIREBASE AUTH & SYNC ─────────────────────────────────────────────
 var fbUser = null;
@@ -1851,6 +1948,7 @@ var LANG = localStorage.getItem('buf_lang') || 'fr';
 
 var I18N = {
   fr: {
+    auth_or:'ou', auth_tab_login:'Connexion', auth_tab_register:'Créer un compte', auth_forgot:'Mot de passe oublié ?', auth_ph_pwd:'Mot de passe', auth_ph_pwd2:'Confirmer le mot de passe', auth_reset_sent:'Email de réinitialisation envoyé !', auth_err_fields:'Remplissez tous les champs', auth_err_pwd_match:'Les mots de passe ne correspondent pas', auth_err_pwd_short:'Minimum 6 caractères', auth_err_no_user:'Aucun compte avec cet email', auth_err_wrong_pwd:'Email ou mot de passe incorrect', auth_err_email_used:'Email déjà utilisé', auth_err_invalid_email:'Email invalide', auth_err_too_many:'Trop de tentatives, réessayez plus tard', auth_err_email:'Entrez votre email d\'abord',
     btn_login:'Connexion',
     auth_title:'Se connecter', auth_sub:'Synchronisez sur tous vos appareils',
     auth_privacy:'Vos données sont privées et sécurisées.',
@@ -1928,12 +2026,14 @@ var I18N = {
     share_modal_title:'\ud83d\udd17 Partager la recette',
   },
   en: {
+    auth_or:'ou', auth_tab_login:'Connexion', auth_tab_register:'Créer un compte', auth_forgot:'Mot de passe oublié ?', auth_ph_pwd:'Mot de passe', auth_ph_pwd2:'Confirmer le mot de passe', auth_reset_sent:'Email de réinitialisation envoyé !', auth_err_fields:'Remplissez tous les champs', auth_err_pwd_match:'Les mots de passe ne correspondent pas', auth_err_pwd_short:'Minimum 6 caractères', auth_err_no_user:'Aucun compte avec cet email', auth_err_wrong_pwd:'Email ou mot de passe incorrect', auth_err_email_used:'Email déjà utilisé', auth_err_invalid_email:'Email invalide', auth_err_too_many:'Trop de tentatives, réessayez plus tard', auth_err_email:'Entrez votre email d\'abord',
     btn_login:'Connexion',
     auth_title:'Se connecter', auth_sub:'Synchronisez sur tous vos appareils',
     auth_privacy:'Vos données sont privées et sécurisées.',
     auth_sync_now:'Synchroniser', auth_signout:'Se déconnecter',
     auth_signout_done:'Déconnecté', auth_syncing:'Synchronisation...',
     auth_sync_done:'Synchronisé !', auth_synced_on_login:'Données synchronisées',
+    auth_or:'or', auth_tab_login:'Sign in', auth_tab_register:'Create account', auth_forgot:'Forgot password?', auth_ph_pwd:'Password', auth_ph_pwd2:'Confirm password', auth_reset_sent:'Reset email sent!', auth_err_fields:'Please fill all fields', auth_err_pwd_match:'Passwords do not match', auth_err_pwd_short:'Minimum 6 characters', auth_err_no_user:'No account with this email', auth_err_wrong_pwd:'Email or password incorrect', auth_err_email_used:'Email already in use', auth_err_invalid_email:'Invalid email', auth_err_too_many:'Too many attempts, try again later', auth_err_email:'Enter your email first',
     btn_login:'Sign in',
     auth_title:'Sign in', auth_sub:'Sync across all your devices',
     auth_privacy:'Your data is private and securely synced.',
