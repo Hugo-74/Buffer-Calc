@@ -2593,6 +2593,12 @@ applyDark(); updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe(); applyI1
 
 })();
 </script>
-<!-- ServiceWorker disabled: only works when self-hosted -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js');
+    });
+  }
+</script>
 </body>
 </html>
