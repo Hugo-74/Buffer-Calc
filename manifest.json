@@ -1,6 +1,6 @@
 {
-  "name": "Buffer Calc Pro",
-  "short_name": "Buffer Calc",
+  "name": "BenchMate",
+  "short_name": "BenchMate",
   "description": "Calculateur de tampons et solutions de laboratoire",
   "start_url": "/",
   "scope": "/",
