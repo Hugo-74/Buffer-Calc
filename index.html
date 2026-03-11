@@ -372,7 +372,7 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
 
 <div class="nav">
   <div class="nav-inner">
-    <div style="display:flex;align-items:center;gap:6px"><span class="nav-badge">Lab</span><button class="lang-btn" id="dark-btn" onclick="toggleDark()" title="Dark mode">☀️</button></div>
+    <div style="display:flex;align-items:center;gap:6px"><span class="nav-badge">Lab</span><button id="install-btn" onclick="installApp()" title="Installer" style="display:none;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;cursor:pointer;align-items:center;gap:4px">⬇ Install</button><button class="lang-btn" id="dark-btn" onclick="toggleDark()" title="Dark mode">☀️</button></div>
     <div style="text-align:center">
       <div class="nav-title">BenchMate</div>
       <div class="nav-step" id="nav-step" style="font-size:11px;margin-top:1px">0 reactif</div>
@@ -2587,6 +2587,34 @@ function renderLots() {
   });
 }
 window.renderLots = renderLots;
+
+
+// ─── PWA INSTALL ──────────────────────────────────────────────────────
+var _deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _deferredPrompt = e;
+  var btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', function() {
+  _deferredPrompt = null;
+  var btn = document.getElementById('install-btn');
+  if (btn) btn.style.display = 'none';
+  toast('✅ BenchMate installé !');
+});
+
+window.installApp = function() {
+  if (!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function(r) {
+    _deferredPrompt = null;
+    var btn = document.getElementById('install-btn');
+    if (btn) btn.style.display = 'none';
+  });
+};
 
 // ─── INIT ─────────────────────────────────────────────────────────────
 applyDark(); updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe(); applyI18n(); initAuth();
