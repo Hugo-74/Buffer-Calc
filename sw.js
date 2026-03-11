@@ -1,4 +1,4 @@
-const CACHE_NAME = 'buffer-calc-v1';
+const CACHE_NAME = 'benchmate-v1';
 const urlsToCache = [
   './index.html',
   './manifest.json',
@@ -27,3 +27,4 @@ self.addEventListener('fetch', event => {
   );
 
 });
+
