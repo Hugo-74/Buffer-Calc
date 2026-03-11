@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>BenchMate</title>
+<title>Buffer Calc</title>
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#007aff">
@@ -374,7 +374,7 @@ select.ab-finp { appearance:none; -webkit-appearance:none; cursor:pointer; }
   <div class="nav-inner">
     <div style="display:flex;align-items:center;gap:6px"><span class="nav-badge">Lab</span><button class="lang-btn" id="dark-btn" onclick="toggleDark()" title="Dark mode">☀️</button></div>
     <div style="text-align:center">
-      <div class="nav-title">BenchMate</div>
+      <div class="nav-title">Buffer Calculator</div>
       <div class="nav-step" id="nav-step" style="font-size:11px;margin-top:1px">0 reactif</div>
     </div>
     <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px"><button class="lang-btn" id="lang-btn" onclick="toggleLang()">EN</button><div id="auth-nav"></div></div>
@@ -1026,7 +1026,7 @@ window.pdfDil = function() {
       '</tr></thead>'+
       '<tbody>'+rowsHtml+'</tbody>'+
     '</table>'+
-    '<div style="text-align:center;font-size:11px;color:#aaa;margin-top:20px">BenchMate &bull; '+date+'</div>'+
+    '<div style="text-align:center;font-size:11px;color:#aaa;margin-top:20px">Buffer Calculator &bull; '+date+'</div>'+
     '</div>';
   var zone = document.getElementById('pdf-zone');
   zone.innerHTML = html;
@@ -2015,7 +2015,7 @@ function buildPDFHtml(rec) {
       '<div><div style="font-size:15px;font-weight:600;color:#1a7a35">'+T('qsp_lbl')+' (QSP)</div><div style="font-size:12px;color:#4a9a5a;margin-top:2px">'+T('pdf_add_last')+'</div></div>'+
       '<div style="font-size:18px;font-weight:700;color:#1a7a35">'+rec.vol+' mL</div>'+
     '</div>'+
-    '<div style="text-align:center;font-size:11px;color:#aaa">BenchMate &bull; '+date+'</div>'+
+    '<div style="text-align:center;font-size:11px;color:#aaa">Buffer Calculator &bull; '+date+'</div>'+
   '</div>';
 }
 
@@ -2593,6 +2593,12 @@ applyDark(); updProg(); updSavedBadge(); updAbBadge(); checkUrlRecipe(); applyI1
 
 })();
 </script>
-<!-- ServiceWorker disabled: only works when self-hosted -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./sw.js');
+    });
+  }
+</script>
 </body>
 </html>
