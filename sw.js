@@ -1,4 +1,4 @@
-const CACHE_NAME = 'benchmate-v1';
+const CACHE_NAME = 'benchmate-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -20,6 +20,7 @@ self.addEventListener('activate', event => {
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     )
   );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
