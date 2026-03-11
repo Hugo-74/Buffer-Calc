@@ -1,4 +1,4 @@
-const CACHE_NAME = 'buffercalc-v2';
+const CACHE_NAME = 'benchmate-v1';
 const urlsToCache = [
   '/',
   '/index.html',
